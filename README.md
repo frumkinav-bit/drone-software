@@ -2,12 +2,16 @@
 
 Программная часть проекта «Модульная беспилотная авиационная система» (ROS 2 Jazzy, Ubuntu 24.04, Gazebo Harmonic).
 
+## Статус
+
+Этап «Старт и требования»: согласованы структура репозитория, архитектура ПО и формат телеметрии (предложение, ожидает подтверждения команды). Следующий этап — базовые программные модули.
+
 ## Структура
 
-- `src/uav_interfaces/` — сообщения и сервисы (Telemetry.msg)
+- `src/uav_interfaces/` — сообщения и сервисы (`Telemetry.msg`)
 - `src/uav_telemetry/`, `uav_autopilot/`, `uav_lidar/`, `uav_mission/`, `uav_bringup/` — пакеты узлов (создаются по плану)
-- `docs/` — документация
-- `data/test/` — тестовые данные (CSV)
+- `docs/` — документация: [архитектура](docs/architecture.md), [формат телеметрии](docs/telemetry_format.md), [решения](docs/decisions.md), [план](docs/plan.md)
+- `data/test/` — тестовые данные (CSV, синтетические)
 - `.devcontainer/` — окружение для VS Code (Docker)
 
 ## Как запустить окружение
@@ -17,8 +21,8 @@
 3. В терминале внутри контейнера:
 
 ```bash
-colcon build            # собрать все пакеты
-source install/setup.bash   # подключить собранное
+colcon build                                       # собрать все пакеты
+source install/setup.bash                          # подключить собранное
 ros2 interface show uav_interfaces/msg/Telemetry   # проверить сообщение
 ```
 
