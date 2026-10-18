@@ -1,0 +1,9 @@
+{
+  "name": "drone-ros2-jazzy",
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "ubuntu",
+  "customizations": {
+    "vscode": { "extensions": ["ms-python.python", "ms-iot.vscode-ros"] }
+  },
+  "postCreateCommand": "echo 'source /opt/ros/jazzy/setup.bash' >> ~/.bashrc"
+}
