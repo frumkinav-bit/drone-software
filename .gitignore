@@ -221,3 +221,7 @@ __marimo__/
 build/
 install/
 log/
+build/
+install/
+log/
+.vscode/
