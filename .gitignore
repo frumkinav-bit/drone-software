@@ -229,3 +229,5 @@ build/
 install/
 log/
 .vscode/
+telemetry_logs/
+telemetry_logs/
