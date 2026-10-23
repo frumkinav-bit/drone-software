@@ -20,6 +20,7 @@ setup(
         'console_scripts': [
             'telemetry_node = uav_telemetry.telemetry_node:main',
             'telemetry_logger = uav_telemetry.telemetry_logger:main',
+            'diagnostics_node = uav_telemetry.diagnostics_node:main',
         ],
     },
 )

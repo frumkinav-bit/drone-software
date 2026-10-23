@@ -38,4 +38,10 @@ def generate_launch_description():
             name='telemetry_logger',
             output='screen',
         ),
+        Node(
+            package='uav_telemetry',
+            executable='diagnostics_node',
+            name='diagnostics_node',
+            output='screen',
+        ),
     ])
