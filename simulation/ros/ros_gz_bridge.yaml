@@ -1,0 +1,31 @@
+# Мост Gazebo -> ROS 2 (ros_gz_bridge, ROS 2 Jazzy + Gazebo Harmonic).
+# Запускать на том же компьютере, где работает Gazebo:
+#   ros2 run ros_gz_bridge parameter_bridge --ros-args -p config_file:=$HOME/simulation/ros/ros_gz_bridge.yaml
+# Имена ROS-тем — предложение, согласовать с программистами (docs/architecture.md в drone-software).
+
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# Лидар: 2D-скан (LaserScan)
+- ros_topic_name: "/lidar/scan"
+  gz_topic_name: "/project_quad/lidar"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
+
+# Лидар: облако точек (lidar_processor подписан на /lidar/points)
+- ros_topic_name: "/lidar/points"
+  gz_topic_name: "/project_quad/lidar/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
+  direction: GZ_TO_ROS
+
+# Камера вниз 1280x720
+- ros_topic_name: "/camera/down/image"
+  gz_topic_name: "/project_quad/camera_down/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS

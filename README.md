@@ -133,3 +133,7 @@ ros2 topic echo /uav/telemetry
 - [Запуск демо](docs/run_demo.md)
 - [Принятые решения](docs/decisions.md)
 - [План работ программистов](docs/plan.md)
+
+## Gazebo (симуляция)
+
+Цифровая модель квадрокоптера и тестовый мир лежат в папке `simulation/`, запуск описан в `simulation/README.md`. Gazebo запускается на ноутбуке группы моделирования (Windows + WSL2).
