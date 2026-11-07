@@ -231,3 +231,4 @@ log/
 .vscode/
 telemetry_logs/
 telemetry_logs/
+.DS_Store

@@ -1,0 +1,271 @@
+<?xml version="1.0"?>
+<!--
+  test_field — тестовый полигон для project_quad (версия 0.2).
+  Плоская площадка 60x60 м, зона взлёта, препятствия (для лидара)
+  и маркеры контрольных точек (для тестового маршрута 16 ноября).
+  Единицы СИ. Оси мира: X — восток, Y — север, Z — вверх (ENU).
+-->
+<sdf version="1.9">
+  <world name="test_field">
+
+    <!-- Физика: шаг 4 мс (250 Гц, как в мирах PX4 SITL), реальное время 1:1.
+         Движок DART, детектор столкновений ODE (по умолчанию Gazebo Harmonic). -->
+    <physics name="4ms" type="ignored">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Обязательные системы мира -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+    <plugin filename="gz-sim-air-pressure-system" name="gz::sim::systems::AirPressure"/>
+    <plugin filename="gz-sim-magnetometer-system" name="gz::sim::systems::Magnetometer"/>
+
+    <gravity>0 0 -9.80665</gravity>
+    <!-- Магнитное поле Земли для Москвы (ENU, Тл), приближённо по модели WMM:
+         полное ~52 мкТл, наклонение ~72°, склонение ~12° E -->
+    <magnetic_field>3.3e-06 1.57e-05 -4.95e-05</magnetic_field>
+    <atmosphere type="adiabatic"/>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.8 0.95 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- Географическая привязка (нужна для GPS). Координаты условные — Москва. -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>55.7818</latitude_deg>
+      <longitude_deg>37.7108</longitude_deg>
+      <elevation>150</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- ===================== ЗЕМЛЯ ===================== -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>200 200</size></plane></geometry>
+          <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>200 200</size></plane></geometry>
+          <material><ambient>0.35 0.5 0.3 1</ambient><diffuse>0.35 0.5 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Площадка взлёта/посадки 2x2 м в начале координат -->
+    <model name="landing_pad">
+      <static>true</static>
+      <pose>0 0 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="pad">
+          <geometry><box><size>2 2 0.01</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
+        </visual>
+        <visual name="h_left">
+          <pose>-0.3 0 0.006 0 0 0</pose>
+          <geometry><box><size>0.12 0.9 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="h_right">
+          <pose>0.3 0 0.006 0 0 0</pose>
+          <geometry><box><size>0.12 0.9 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="h_bar">
+          <pose>0 0 0.006 0 0 0</pose>
+          <geometry><box><size>0.6 0.12 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>2 2 0.01</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ===================== ПРЕПЯТСТВИЯ (для лидара) ===================== -->
+    <model name="wall_north">
+      <static>true</static>
+      <pose>0 15 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>12 0.3 3</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>12 0.3 3</size></box></geometry>
+          <material><ambient>0.7 0.65 0.55 1</ambient><diffuse>0.7 0.65 0.55 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="building_a">
+      <static>true</static>
+      <pose>12 -8 2.5 0 0 0.3</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>5 4 5</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>5 4 5</size></box></geometry>
+          <material><ambient>0.6 0.6 0.65 1</ambient><diffuse>0.6 0.6 0.65 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="pillar_1">
+      <static>true</static>
+      <pose>-8 5 2 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.4</radius><length>4</length></cylinder></geometry></collision>
+        <visual name="v">
+          <geometry><cylinder><radius>0.4</radius><length>4</length></cylinder></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient><diffuse>0.5 0.5 0.5 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="pillar_2">
+      <static>true</static>
+      <pose>-8 -5 2 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.4</radius><length>4</length></cylinder></geometry></collision>
+        <visual name="v">
+          <geometry><cylinder><radius>0.4</radius><length>4</length></cylinder></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient><diffuse>0.5 0.5 0.5 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===================== МАРКЕРЫ КОНТРОЛЬНЫХ ТОЧЕК =====================
+         Без коллизий: только для глаз. Маршрут: WP1 -> WP2 -> WP3 -> WP4 -> домой.
+         Высота маршрута по умолчанию 5 м (полупрозрачный шар показывает точку). -->
+    <model name="wp1">
+      <static>true</static>
+      <pose>10 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="pole"><pose>0 0 2.5 0 0 0</pose>
+          <geometry><cylinder><radius>0.05</radius><length>5</length></cylinder></geometry>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+        <visual name="point"><pose>0 0 5 0 0 0</pose>
+          <geometry><sphere><radius>0.4</radius></sphere></geometry>
+          <transparency>0.5</transparency>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="wp2">
+      <static>true</static>
+      <pose>10 10 0 0 0 0</pose>
+      <link name="link">
+        <visual name="pole"><pose>0 0 2.5 0 0 0</pose>
+          <geometry><cylinder><radius>0.05</radius><length>5</length></cylinder></geometry>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+        <visual name="point"><pose>0 0 5 0 0 0</pose>
+          <geometry><sphere><radius>0.4</radius></sphere></geometry>
+          <transparency>0.5</transparency>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="wp3">
+      <static>true</static>
+      <pose>-3 10 0 0 0 0</pose>
+      <link name="link">
+        <visual name="pole"><pose>0 0 2.5 0 0 0</pose>
+          <geometry><cylinder><radius>0.05</radius><length>5</length></cylinder></geometry>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+        <visual name="point"><pose>0 0 5 0 0 0</pose>
+          <geometry><sphere><radius>0.4</radius></sphere></geometry>
+          <transparency>0.5</transparency>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="wp4">
+      <static>true</static>
+      <pose>-3 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="pole"><pose>0 0 2.5 0 0 0</pose>
+          <geometry><cylinder><radius>0.05</radius><length>5</length></cylinder></geometry>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+        <visual name="point"><pose>0 0 5 0 0 0</pose>
+          <geometry><sphere><radius>0.4</radius></sphere></geometry>
+          <transparency>0.5</transparency>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- ===================== ОБЪЕКТЫ ДЛЯ КАМЕРЫ =====================
+         Упрощённые «машины» и «люди» под маршрутом — для проверки камеры вниз
+         (группа CV). Тестовые снимки Николая сняты сверху: люди, машины, дороги. -->
+    <model name="car_1">
+      <static>true</static>
+      <pose>10 4 0.75 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>4.4 1.8 1.5</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>4.4 1.8 1.5</size></box></geometry>
+          <material><ambient>0.8 0.1 0.1 1</ambient><diffuse>0.8 0.1 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="car_2">
+      <static>true</static>
+      <pose>4 10 0.75 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>4.4 1.8 1.5</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>4.4 1.8 1.5</size></box></geometry>
+          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="person_1">
+      <static>true</static>
+      <pose>-3 5 0.85 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.25</radius><length>1.7</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.25</radius><length>1.7</length></cylinder></geometry>
+          <material><ambient>0.1 0.3 0.8 1</ambient><diffuse>0.1 0.3 0.8 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="person_2">
+      <static>true</static>
+      <pose>-2.2 5.6 0.85 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.25</radius><length>1.7</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.25</radius><length>1.7</length></cylinder></geometry>
+          <material><ambient>0.2 0.6 0.2 1</ambient><diffuse>0.2 0.6 0.2 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- ===================== ВЕТЕР (выключен) =====================
+         Для проверки устойчивости раскомментируйте блок и добавьте
+         <enable_wind>true</enable_wind> в base_link модели.
+    <plugin filename="gz-sim-wind-effects-system" name="gz::sim::systems::WindEffects">
+      <force_approximation_scaling_factor>1</force_approximation_scaling_factor>
+      <horizontal><magnitude><time_for_rise>10</time_for_rise>
+        <sin><amplitude_percent>0.05</amplitude_percent><period>60</period></sin>
+        <noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise>
+      </magnitude></horizontal>
+    </plugin>
+    <wind><linear_velocity>3 0 0</linear_velocity></wind>
+    -->
+
+    <!-- ===================== КВАДРОКОПТЕР ===================== -->
+    <include>
+      <uri>model://project_quad</uri>
+      <name>project_quad</name>
+      <pose>0 0 0.012 0 0 0</pose>
+    </include>
+
+  </world>
+</sdf>
