@@ -1,4 +1,7 @@
-"""Демо: тестовые данные -> telemetry_node -> журнал CSV. Запускать из корня репозитория."""
+"""Демо: тестовые данные -> telemetry_node -> журнал CSV, диагностика и заглушка автопилота.
+
+Запускать из корня репозитория.
+"""
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -43,5 +46,13 @@ def generate_launch_description():
             executable='diagnostics_node',
             name='diagnostics_node',
             output='screen',
+        ),
+        # Заглушка автопилота: принимает команды из /uav/command и пишет их в журнал
+        Node(
+            package='uav_autopilot',
+            executable='autopilot_bridge',
+            name='autopilot_bridge',
+            output='screen',
+            parameters=[{'source': 'stub'}],
         ),
     ])

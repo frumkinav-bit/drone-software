@@ -232,3 +232,5 @@ log/
 telemetry_logs/
 telemetry_logs/
 .DS_Store
+# пакет px4_msgs клонируется отдельно (см. docs/autopilot_interface.md)
+src/px4_msgs/

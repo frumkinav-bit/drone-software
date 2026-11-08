@@ -94,7 +94,7 @@ ros2 launch uav_bringup telemetry_demo.launch.py   # запустить цепо
 ros2 topic echo /uav/telemetry
 ```
 
-Узел `test_data_player` отправляет 12 строк тестовых данных и останавливается. Остановить запуск: `Ctrl+C`. Результат — файл `telemetry_logs/telemetry_ГГГГММДД_ЧЧММСС.csv`. Подробнее: [docs/run_demo.md](docs/run_demo.md).
+Узел `test_data_player` отправляет 12 строк тестовых данных и останавливается. Остановить запуск: `Ctrl+C`. Результат — файл `telemetry_logs/telemetry_ГГГГММДД_ЧЧММСС.csv`. Подробнее: [docs/run_demo.md](docs/run_demo.md). Интерфейс с автопилотом PX4 и команды — в [docs/autopilot_interface.md](docs/autopilot_interface.md).
 
 ## Как работать командой
 
