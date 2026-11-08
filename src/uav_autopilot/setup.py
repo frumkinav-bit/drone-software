@@ -19,6 +19,7 @@ setup(
     entry_points={
         'console_scripts': [
             'test_data_player = uav_autopilot.test_data_player:main',
+            'autopilot_bridge = uav_autopilot.autopilot_bridge:main',
         ],
     },
 )

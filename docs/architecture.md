@@ -5,7 +5,7 @@
 | Узел | Назначение | Публикует | Подписан на | Нужен к |
 | --- | --- | --- | --- | --- |
 | `test_data_player` | читает тестовые данные (CSV), имитирует автопилот | `/uav/raw_state` | — | 2 ноября |
-| `autopilot_bridge` | связь с автопилотом, перевод данных в наши сообщения | `/uav/raw_state` | `/uav/command` | 9 ноября |
+| `autopilot_bridge` | связь с автопилотом (PX4): заглушка и режим px4, перевод данных в наши сообщения, передача команд | `/uav/raw_state`, `/fmu/in/vehicle_command` | `/uav/command`, `/fmu/out/...` | 9 ноября |
 | `telemetry_node` | собирает данные в одно сообщение телеметрии | `/uav/telemetry` | `/uav/raw_state`, `/uav/lidar_status` | 2–6 ноября |
 | `telemetry_logger` | пишет журнал (CSV, rosbag2) | — | `/uav/telemetry` | 16 ноября |
 | `lidar_processor` | обработка данных лидара, диагностика | `/uav/lidar_status` | `/lidar/points` | 23 ноября |
@@ -14,4 +14,4 @@
 
 Сервисы: `/mission/upload` (загрузить маршрут), `/mission/start`, `/mission/abort`.
 
-Формат сообщений — в [telemetry_format.md](telemetry_format.md), решения — в [decisions.md](decisions.md), сроки — в [plan.md](plan.md).
+Интерфейс с автопилотом — в [autopilot_interface.md](autopilot_interface.md). Формат сообщений — в [telemetry_format.md](telemetry_format.md), решения — в [decisions.md](decisions.md), сроки — в [plan.md](plan.md).

@@ -15,6 +15,14 @@ ros2 topic echo /uav/telemetry     # смотреть телеметрию
 ros2 topic hz /uav/telemetry       # проверить частоту
 ```
 
+Команда автопилоту (заглушка `autopilot_bridge` пишет её в журнал, автопилоту ничего не уходит):
+
+```bash
+ros2 topic pub --once /uav/command uav_interfaces/msg/Command "{command: 2}"   # 2 = взлёт
+```
+
+Подробнее про команды и про режим с настоящим PX4 — в [autopilot_interface.md](autopilot_interface.md).
+
 Результат: файл `telemetry_logs/telemetry_ГГГГММДД_ЧЧММСС.csv` со строками телеметрии.
 Узел `test_data_player` отправляет 1 строку в секунду (параметр `rate_hz`) и останавливается, когда данные закончились.
 

@@ -10,7 +10,8 @@ from rclpy.node import Node
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus  # стандартные сообщения диагностики ROS
 from uav_interfaces.msg import Telemetry
 
-from uav_telemetry.diagnostics_logic import ERROR, OK, WARN, evaluate, worst_level
+from uav_telemetry.diagnostics_logic import (ERROR, LOW_BATTERY_ERROR, LOW_BATTERY_WARN, OK, WARN,
+                                             evaluate, worst_level)
 
 # Перевод наших уровней в уровни стандартного сообщения ROS
 DIAG_LEVELS = {
@@ -24,16 +25,24 @@ class DiagnosticsNode(Node):
     def __init__(self):
         super().__init__('diagnostics_node')
 
+        # Пороги заряда аккумулятора в процентах; их можно менять при запуске
+        self.declare_parameter('battery_warn_percent', LOW_BATTERY_WARN)
+        self.declare_parameter('battery_error_percent', LOW_BATTERY_ERROR)
+        self.battery_warn = self.get_parameter('battery_warn_percent').get_parameter_value().integer_value
+        self.battery_error = self.get_parameter('battery_error_percent').get_parameter_value().integer_value
+
         self.active = {}  # проблемы, которые уже были замечены: {код: уровень}
 
         self.publisher = self.create_publisher(DiagnosticArray, '/diagnostics', 10)
         self.subscription = self.create_subscription(
             Telemetry, '/uav/telemetry', self.on_telemetry, 10)
-        self.get_logger().info('diagnostics_node запущен')
+        self.get_logger().info(
+            f'diagnostics_node запущен, пороги заряда: {self.battery_warn}% и {self.battery_error}%')
 
     def on_telemetry(self, msg):
         # Проверяем текущие данные по правилам из diagnostics_logic.py
-        problems = evaluate(msg.battery_percent, msg.link_state, msg.flight_mode, list(msg.alerts))
+        problems = evaluate(msg.battery_percent, msg.link_state, msg.flight_mode, list(msg.alerts),
+                            self.battery_warn, self.battery_error)
 
         # Сообщаем, когда проблема появилась или стала серьёзнее (было WARN, стало ERROR),
         # а не на каждое сообщение: иначе терминал заполнится одинаковыми строками
