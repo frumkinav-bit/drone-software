@@ -150,10 +150,11 @@ ros2 topic pub --once /uav/command uav_interfaces/msg/Command "{command: 5, mode
 | `source` | `stub` | `stub` или `px4` |
 | `rate_hz` | `10.0` | частота публикации `/uav/raw_state` |
 | `consider_rc_loss` | `true` | учитывать потерю пульта как потерю связи |
+| `consider_gcs_loss` | `true` | учитывать потерю наземной станции (QGC) как потерю связи; в симуляции без QGC ставим `false` |
 | `weak_rssi_percent` | `30` | ниже этого уровня сигнала связь считается слабой |
 | `topic_vehicle_status`, `topic_battery`, `topic_local_position`, `topic_global_position`, `topic_attitude`, `topic_failsafe`, `topic_command` | `/fmu/out/...`, `/fmu/in/vehicle_command` | имена тем PX4 |
 
-Узел `diagnostics_node` принимает параметры `battery_warn_percent` (15) и `battery_error_percent` (7).
+Узел `diagnostics_node` принимает параметры `battery_warn_percent` (15), `battery_error_percent` (7) и `telemetry_timeout_s` (3.0 — через сколько секунд тишины сообщаем `TELEMETRY_LOST`).
 Значения по умолчанию совпадают с настройками PX4 по умолчанию (`BAT_LOW_THR` 15%, `BAT_CRIT_THR` 7%).
 После выбора аккумулятора их нужно уточнить у инженера по автопилоту.
 
@@ -190,8 +191,12 @@ ros2 topic pub --once /uav/command uav_interfaces/msg/Command "{command: 3}"
 3. Запустить мост и остальные узлы:
 
    ```bash
-   ros2 launch uav_bringup autopilot_px4.launch.py use_sim_time:=true consider_rc_loss:=false
+   ros2 launch uav_bringup autopilot_px4.launch.py use_sim_time:=true consider_rc_loss:=false consider_gcs_loss:=false
    ```
+
+   Если QGroundControl не запущен (а в SITL стоит `NAV_DLL_ACT 0`), PX4 считает наземную станцию потерянной,
+   и `link_state` был бы 0 — поэтому `consider_gcs_loss:=false`. Запись в rosbag2 включается `record_bag:=true`.
+   Порядок запуска симуляции v0.5 (установка, `px4_setup.sh`, `px4_run.sh`, мост) описан в `simulation/README.md`.
 
    `use_sim_time:=true` нужен, если мост Gazebo → ROS 2 (`simulation/ros/ros_gz_bridge.yaml`) публикует `/clock`.
    В журнале телеметрии тогда будет время симуляции, а не настоящее.

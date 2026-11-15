@@ -57,3 +57,19 @@ def worst_level(problems):
     """Самый высокий уровень среди проблем; если проблем нет — OK."""
     levels = [level for level, _text in problems.values()]
     return max(levels) if levels else OK
+
+
+# Через сколько секунд молчания темы /uav/telemetry считаем, что телеметрия пропала
+TELEMETRY_TIMEOUT_S = 3.0
+
+
+def telemetry_silent(last_received_s, now_s, timeout_s=TELEMETRY_TIMEOUT_S):
+    """True, если телеметрия молчит дольше timeout_s секунд.
+
+    last_received_s — когда пришло последнее сообщение (None, если не приходило ни разу),
+    now_s — текущее время. Оба в секундах по одним и тем же часам.
+    Пока сообщений не было вообще, молчанием не считаем: узел просто ещё ждёт первых данных.
+    """
+    if last_received_s is None:
+        return False
+    return now_s - last_received_s > timeout_s

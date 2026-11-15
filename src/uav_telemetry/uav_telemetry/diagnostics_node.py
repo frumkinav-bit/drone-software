@@ -11,7 +11,7 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus  # станд�
 from uav_interfaces.msg import Telemetry
 
 from uav_telemetry.diagnostics_logic import (ERROR, LOW_BATTERY_ERROR, LOW_BATTERY_WARN, OK, WARN,
-                                             evaluate, worst_level)
+                                             TELEMETRY_TIMEOUT_S, evaluate, telemetry_silent, worst_level)
 
 # Перевод наших уровней в уровни стандартного сообщения ROS
 DIAG_LEVELS = {
@@ -31,15 +31,43 @@ class DiagnosticsNode(Node):
         self.battery_warn = self.get_parameter('battery_warn_percent').get_parameter_value().integer_value
         self.battery_error = self.get_parameter('battery_error_percent').get_parameter_value().integer_value
 
+        # Через сколько секунд без сообщений сообщаем, что телеметрия пропала
+        self.declare_parameter('telemetry_timeout_s', TELEMETRY_TIMEOUT_S)
+        self.timeout = self.get_parameter('telemetry_timeout_s').get_parameter_value().double_value
+        self.last_received = None  # время последнего сообщения (по часам узла), секунды
+        self.silent = False        # уже сообщили, что телеметрия пропала?
+
         self.active = {}  # проблемы, которые уже были замечены: {код: уровень}
 
         self.publisher = self.create_publisher(DiagnosticArray, '/diagnostics', 10)
         self.subscription = self.create_subscription(
             Telemetry, '/uav/telemetry', self.on_telemetry, 10)
+        self.create_timer(1.0, self.check_silence)  # раз в секунду проверяем, не замолчала ли телеметрия
         self.get_logger().info(
             f'diagnostics_node запущен, пороги заряда: {self.battery_warn}% и {self.battery_error}%')
 
+    def now_s(self):
+        # Текущее время узла в секундах (учитывает use_sim_time)
+        return self.get_clock().now().nanoseconds * 1e-9
+
+    def check_silence(self):
+        # Сторож: если сообщения перестали приходить, предупреждаем один раз
+        silent = telemetry_silent(self.last_received, self.now_s(), self.timeout)
+        if silent and not self.silent:
+            self.get_logger().error(f'TELEMETRY_LOST: телеметрия не приходит больше {self.timeout:.0f} с')
+            status = DiagnosticStatus()
+            status.level = DiagnosticStatus.ERROR
+            status.name = 'uav/telemetry'
+            status.message = 'TELEMETRY_LOST: нет новых сообщений'
+            array = DiagnosticArray()
+            array.status = [status]
+            self.publisher.publish(array)
+        elif not silent and self.silent:
+            self.get_logger().info('Телеметрия снова приходит')
+        self.silent = silent
+
     def on_telemetry(self, msg):
+        self.last_received = self.now_s()  # запоминаем, когда пришло сообщение
         # Проверяем текущие данные по правилам из diagnostics_logic.py
         problems = evaluate(msg.battery_percent, msg.link_state, msg.flight_mode, list(msg.alerts),
                             self.battery_warn, self.battery_error)

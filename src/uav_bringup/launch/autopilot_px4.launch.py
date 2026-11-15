@@ -4,12 +4,13 @@
 Нужны: собранный px4_msgs (ветка release/1.17), запущенный Micro XRCE-DDS Agent и PX4.
 Запускать на ноутбуке группы моделирования, рядом с симуляцией, из корня репозитория:
 
-  ros2 launch uav_bringup autopilot_px4.launch.py use_sim_time:=true consider_rc_loss:=false
+  ros2 launch uav_bringup autopilot_px4.launch.py use_sim_time:=true consider_rc_loss:=false consider_gcs_loss:=false
 
 Значения true и false пишутся с маленькой буквы.
 """
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -23,7 +24,10 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         # В симуляции без пульта PX4 считает пульт потерянным; тогда пишем consider_rc_loss:=false
         DeclareLaunchArgument('consider_rc_loss', default_value='true'),
+        # Без QGroundControl PX4 считает наземную станцию потерянной; тогда пишем consider_gcs_loss:=false
+        DeclareLaunchArgument('consider_gcs_loss', default_value='true'),
         DeclareLaunchArgument('uav_id', default_value='uav_01'),
+        DeclareLaunchArgument('record_bag', default_value='false'),  # true — ещё и писать rosbag2
 
         Node(
             package='uav_autopilot',
@@ -34,6 +38,7 @@ def generate_launch_description():
                 'use_sim_time': use_sim_time,
                 'source': 'px4',
                 'consider_rc_loss': ParameterValue(LaunchConfiguration('consider_rc_loss'), value_type=bool),
+                'consider_gcs_loss': ParameterValue(LaunchConfiguration('consider_gcs_loss'), value_type=bool),
             }],
         ),
         Node(
@@ -59,5 +64,11 @@ def generate_launch_description():
             name='diagnostics_node',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time}],
+        ),
+        # Необязательная запись всех тем в rosbag2: record_bag:=true (папка bags/ в текущей директории)
+        ExecuteProcess(
+            cmd=['ros2', 'bag', 'record', '-o', 'bags/' + 'run', '/uav/raw_state', '/uav/telemetry', '/diagnostics'],
+            condition=IfCondition(LaunchConfiguration('record_bag')),
+            output='screen',
         ),
     ])

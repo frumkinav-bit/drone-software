@@ -29,6 +29,17 @@ ros2 topic pub --once /uav/command uav_interfaces/msg/Command "{command: 2}"   #
 Другой файл или скорость: `ros2 launch uav_bringup telemetry_demo.launch.py csv_path:=data/test/my.csv rate_hz:=10.0`
 (число для `rate_hz` пишем с точкой, например `10.0`).
 
+## Запись и проверка журнала
+
+После демо в папке `telemetry_logs/` появится файл `telemetry_<дата>_<время>.csv`. Проверка:
+
+```
+ros2 run uav_telemetry check_telemetry_log telemetry_logs/<файл>.csv --source data/test/sample_telemetry.csv
+```
+
+Полёт по маршруту моделирования: `csv_path:=data/test/sample_mission.csv`.
+Дополнительно записать всё в rosbag2: `record_bag:=true` (папка `bags/run`; воспроизведение — `ros2 bag play bags/run`).
+
 ## Сообщение RawState
 
 `/uav/raw_state` — состояние от автопилота. Поля те же, что в `Telemetry`, но без `uav_id` и `mission_status`:
@@ -36,6 +47,6 @@ ros2 topic pub --once /uav/command uav_interfaces/msg/Command "{command: 2}"   #
 
 ## Ограничения
 
-- QoS сейчас по умолчанию (reliable), на best effort перейдём при интеграции с автопилотом.
+- QoS для тем `/uav/*` сейчас по умолчанию (reliable); для тем PX4 `/fmu/out/*` мост уже использует best effort.
 - Данные в `data/test/` синтетические.
-- Тесты: `python3 -m pytest src/uav_autopilot/test` (проверяют чтение CSV).
+- Тесты: `python3 -m pytest src/uav_autopilot/test src/uav_telemetry/test` (чтение CSV, диагностика, проверка журнала).

@@ -1,19 +1,22 @@
 <?xml version="1.0"?>
 <!--
-  project_quad v0.2 — цифровая модель квадрокоптера проекта.
+  project_quad v0.4 — цифровая модель квадрокоптера проекта.
   ФАЙЛ СГЕНЕРИРОВАН скриптом tools/generate_model.py — правьте параметры там.
 
   Геометрия: CAD-модель группы конструкторов (рама G4ZO x2, 5", диагональ 230,5 мм).
   Единицы СИ. Оси: X вперёд, Y влево, Z вверх. Начало — низ рамы, центр моторов.
-  Порядок моторов: PX4 Quadrotor X.
+  Порядок моторов: PX4 Quadrotor X. Компоновка: отчёт конструкторов от 8.11.2026.
+  Обороты моторов в УСЛОВНЫХ рад/с (1000 = 3200 настоящих), см. генератор.
 
-  Общая масса: 0.753 кг. Из них оценки (нет в CAD):
+  Общая масса: 0.773 кг. Бортовые компоненты:
+       - аккумулятор 6S 1250: 220 г
        - Pixhawk 6C Mini: 39 г
-       - бортовой компьютер (оценка): 45 г
+       - бортовой компьютер *: 45 г
        - радиомодем SiK 433 МГц: 25 г
        - модуль питания и провода: 30 г
-       - GPS Holybro M9N + мачта: 40 г
-       - лидар (тестовый, модель не выбрана): 50 г
+       - мачта GPS: 15 г
+       - GPS Holybro M9N: 25 г
+       - лидар на площадке над АКБ *: 50 г
 -->
 <sdf version="1.9">
   <model name="project_quad">
@@ -21,12 +24,12 @@
 
     <link name="base_link">
       <inertial>
-        <pose>-0.00949 0.00000 0.03424 0 0 0</pose>
-        <mass>0.67320</mass>
+        <pose>-0.00002 0.00000 0.03649 0 0 0</pose>
+        <mass>0.69320</mass>
         <inertia>
-          <ixx>1.874376e-03</ixx><ixy>1.868506e-08</ixy><ixz>2.950269e-04</ixz>
-          <iyy>2.819126e-03</iyy><iyz>1.835437e-09</iyz>
-          <izz>2.586108e-03</izz>
+          <ixx>2.005678e-03</ixx><ixy>0.000000e+00</ixy><ixz>-9.977446e-05</ixz>
+          <iyy>2.956938e-03</iyy><iyz>0.000000e+00</iyz>
+          <izz>2.590848e-03</izz>
         </inertia>
       </inertial>
       <visual name="frame_base">
@@ -45,25 +48,13 @@
         <geometry><mesh><uri>model://project_quad/meshes/cam_plates.stl</uri></mesh></geometry>
         <material><ambient>0.31 0.31 0.63 1</ambient><diffuse>0.31 0.31 0.63 1</diffuse><specular>0.2 0.2 0.2 1</specular></material>
       </visual>
-      <visual name="esc_fc">
-        <geometry><mesh><uri>model://project_quad/meshes/esc_fc.stl</uri></mesh></geometry>
-        <material><ambient>0.10 0.35 0.20 1</ambient><diffuse>0.10 0.35 0.20 1</diffuse><specular>0.2 0.2 0.2 1</specular></material>
-      </visual>
       <visual name="esc_cap">
         <geometry><mesh><uri>model://project_quad/meshes/esc_cap.stl</uri></mesh></geometry>
         <material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.08 0.08 0.08 1</diffuse><specular>0.2 0.2 0.2 1</specular></material>
       </visual>
-      <visual name="vtx">
-        <geometry><mesh><uri>model://project_quad/meshes/vtx.stl</uri></mesh></geometry>
-        <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse><specular>0.2 0.2 0.2 1</specular></material>
-      </visual>
       <visual name="rx">
         <geometry><mesh><uri>model://project_quad/meshes/rx.stl</uri></mesh></geometry>
         <material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.08 0.08 0.08 1</diffuse><specular>0.2 0.2 0.2 1</specular></material>
-      </visual>
-      <visual name="battery">
-        <geometry><mesh><uri>model://project_quad/meshes/battery.stl</uri></mesh></geometry>
-        <material><ambient>0.12 0.24 0.55 1</ambient><diffuse>0.12 0.24 0.55 1</diffuse><specular>0.2 0.2 0.2 1</specular></material>
       </visual>
       <visual name="camera">
         <geometry><mesh><uri>model://project_quad/meshes/camera.stl</uri></mesh></geometry>
@@ -73,20 +64,40 @@
         <geometry><mesh><uri>model://project_quad/meshes/motor_stators.stl</uri></mesh></geometry>
         <material><ambient>0.63 0.63 0.67 1</ambient><diffuse>0.63 0.63 0.67 1</diffuse><specular>0.2 0.2 0.2 1</specular></material>
       </visual>
+      <visual name="vtx">
+        <pose>0 0 0 0 0 3.14159</pose>
+        <geometry><mesh><uri>model://project_quad/meshes/vtx.stl</uri></mesh></geometry>
+        <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse></material>
+      </visual>
+      <visual name="battery">
+        <pose>-0.0240 0.0000 0.0525 0 0 0</pose>
+        <geometry><box><size>0.0760 0.0360 0.0330</size></box></geometry>
+        <material><ambient>0.12 0.24 0.55 1</ambient><diffuse>0.12 0.24 0.55 1</diffuse></material>
+      </visual>
+      <visual name="esc_4in1">
+        <pose>0.0097 0.0000 0.0115 0 0 0</pose>
+        <geometry><box><size>0.0360 0.0360 0.0070</size></box></geometry>
+        <material><ambient>0.10 0.35 0.20 1</ambient><diffuse>0.10 0.35 0.20 1</diffuse></material>
+      </visual>
+      <visual name="pixhawk_6c_mini">
+        <pose>0.0145 0.0000 0.0231 0 0 0</pose>
+        <geometry><box><size>0.0533 0.0390 0.0162</size></box></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>
       <!-- Заглушки компонентов, которых пока нет в CAD -->
       <visual name="gps_mast">
-        <pose>-0.0650 0.0000 0.0657 0 0 0</pose>
-        <geometry><cylinder><radius>0.004</radius><length>0.0595</length></cylinder></geometry>
+        <pose>0.0650 0.0000 0.0730 0 0 0</pose>
+        <geometry><cylinder><radius>0.004</radius><length>0.0740</length></cylinder></geometry>
         <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
       </visual>
       <visual name="gps_puck">
-        <pose>-0.0650 0.0000 0.1030 0 0 0</pose>
+        <pose>0.0650 0.0000 0.1175 0 0 0</pose>
         <geometry><cylinder><radius>0.025</radius><length>0.015</length></cylinder></geometry>
         <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
       </visual>
       <visual name="lidar_body">
-        <pose>0.0450 0.0000 0.0585 0 0 0</pose>
-        <geometry><cylinder><radius>0.018</radius><length>0.0450</length></cylinder></geometry>
+        <pose>-0.0240 0.0000 0.0870 0 0 0</pose>
+        <geometry><box><size>0.0400 0.0400 0.0300</size></box></geometry>
         <material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material>
       </visual>
 
@@ -96,7 +107,7 @@
         <geometry><box><size>0.195 0.223 0.007</size></box></geometry>
       </collision>
       <collision name="battery_collision">
-        <pose>-0.0225 0 0.0525 0 0 0</pose>
+        <pose>-0.0240 0.0000 0.0525 0 0 0</pose>
         <geometry><box><size>0.076 0.036 0.033</size></box></geometry>
       </collision>
 
@@ -122,7 +133,7 @@
 
       <!-- Магнитометр (компас в модуле GPS) -->
       <sensor name="magnetometer_sensor" type="magnetometer">
-        <pose>-0.0650 0.0000 0.1030 0.0000 0.0000 0.0000</pose>
+        <pose>0.0650 0.0000 0.1175 0.0000 0.0000 0.0000</pose>
         <always_on>1</always_on>
         <update_rate>100</update_rate>
         <magnetometer><x><noise type="gaussian"><mean>0</mean><stddev>0.003</stddev></noise></x><y><noise type="gaussian"><mean>0</mean><stddev>0.003</stddev></noise></y><z><noise type="gaussian"><mean>0</mean><stddev>0.003</stddev></noise></z></magnetometer>
@@ -130,13 +141,13 @@
 
       <!-- GPS Holybro M9N -->
       <sensor name="navsat_sensor" type="navsat">
-        <pose>-0.0650 0.0000 0.1030 0.0000 0.0000 0.0000</pose>
+        <pose>0.0650 0.0000 0.1175 0.0000 0.0000 0.0000</pose>
         <always_on>1</always_on>
         <update_rate>10</update_rate>
         <navsat>
           <position_sensing>
-            <horizontal><noise type="gaussian"><mean>0</mean><stddev>6.288e-06</stddev></noise></horizontal>
-            <vertical><noise type="gaussian"><mean>0</mean><stddev>1.2</stddev></noise></vertical>
+            <horizontal><noise type="gaussian"><mean>0</mean><stddev>2.695e-06</stddev></noise></horizontal>
+            <vertical><noise type="gaussian"><mean>0</mean><stddev>0.4</stddev></noise></vertical>
           </position_sensing>
           <velocity_sensing>
             <horizontal><noise type="gaussian"><mean>0</mean><stddev>0.05</stddev></noise></horizontal>
@@ -147,7 +158,7 @@
 
       <!-- Тестовый лидар (2D). Модель лидара ещё не выбрана электронщиками. -->
       <sensor name="lidar_sensor" type="gpu_lidar">
-        <pose>0.0450 0.0000 0.0850 0.0000 0.0000 0.0000</pose>
+        <pose>-0.0240 0.0000 0.0980 0.0000 0.0000 0.0000</pose>
         <topic>project_quad/lidar</topic>
         <always_on>1</always_on>
         <update_rate>10</update_rate>
@@ -301,69 +312,73 @@
     <!-- Моторы. Команды: топик /project_quad/command/motor_speed (см. tools/motors.sh) -->
     <plugin filename="gz-sim-multicopter-motor-model-system"
             name="gz::sim::systems::MulticopterMotorModel">
+      <robotNamespace>project_quad</robotNamespace>
       <jointName>rotor_0_joint</jointName>
       <linkName>rotor_0</linkName>
       <turningDirection>ccw</turningDirection>
       <timeConstantUp>0.0125</timeConstantUp>
       <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>3200.0</maxRotVelocity>
-      <motorConstant>1.63e-06</motorConstant>
+      <maxRotVelocity>1000.0</maxRotVelocity>
+      <motorConstant>1.6691200000000004e-05</motorConstant>
       <momentConstant>0.016</momentConstant>
       <commandSubTopic>command/motor_speed</commandSubTopic>
       <motorNumber>0</motorNumber>
-      <rotorDragCoefficient>1e-06</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-08</rollingMomentCoefficient>
+      <rotorDragCoefficient>3.2e-06</rotorDragCoefficient>
+      <rollingMomentCoefficient>3.2e-08</rollingMomentCoefficient>
       <rotorVelocitySlowdownSim>10.0</rotorVelocitySlowdownSim>
       <motorType>velocity</motorType>
     </plugin>
     <plugin filename="gz-sim-multicopter-motor-model-system"
             name="gz::sim::systems::MulticopterMotorModel">
+      <robotNamespace>project_quad</robotNamespace>
       <jointName>rotor_1_joint</jointName>
       <linkName>rotor_1</linkName>
       <turningDirection>ccw</turningDirection>
       <timeConstantUp>0.0125</timeConstantUp>
       <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>3200.0</maxRotVelocity>
-      <motorConstant>1.63e-06</motorConstant>
+      <maxRotVelocity>1000.0</maxRotVelocity>
+      <motorConstant>1.6691200000000004e-05</motorConstant>
       <momentConstant>0.016</momentConstant>
       <commandSubTopic>command/motor_speed</commandSubTopic>
       <motorNumber>1</motorNumber>
-      <rotorDragCoefficient>1e-06</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-08</rollingMomentCoefficient>
+      <rotorDragCoefficient>3.2e-06</rotorDragCoefficient>
+      <rollingMomentCoefficient>3.2e-08</rollingMomentCoefficient>
       <rotorVelocitySlowdownSim>10.0</rotorVelocitySlowdownSim>
       <motorType>velocity</motorType>
     </plugin>
     <plugin filename="gz-sim-multicopter-motor-model-system"
             name="gz::sim::systems::MulticopterMotorModel">
+      <robotNamespace>project_quad</robotNamespace>
       <jointName>rotor_2_joint</jointName>
       <linkName>rotor_2</linkName>
       <turningDirection>cw</turningDirection>
       <timeConstantUp>0.0125</timeConstantUp>
       <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>3200.0</maxRotVelocity>
-      <motorConstant>1.63e-06</motorConstant>
+      <maxRotVelocity>1000.0</maxRotVelocity>
+      <motorConstant>1.6691200000000004e-05</motorConstant>
       <momentConstant>0.016</momentConstant>
       <commandSubTopic>command/motor_speed</commandSubTopic>
       <motorNumber>2</motorNumber>
-      <rotorDragCoefficient>1e-06</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-08</rollingMomentCoefficient>
+      <rotorDragCoefficient>3.2e-06</rotorDragCoefficient>
+      <rollingMomentCoefficient>3.2e-08</rollingMomentCoefficient>
       <rotorVelocitySlowdownSim>10.0</rotorVelocitySlowdownSim>
       <motorType>velocity</motorType>
     </plugin>
     <plugin filename="gz-sim-multicopter-motor-model-system"
             name="gz::sim::systems::MulticopterMotorModel">
+      <robotNamespace>project_quad</robotNamespace>
       <jointName>rotor_3_joint</jointName>
       <linkName>rotor_3</linkName>
       <turningDirection>cw</turningDirection>
       <timeConstantUp>0.0125</timeConstantUp>
       <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>3200.0</maxRotVelocity>
-      <motorConstant>1.63e-06</motorConstant>
+      <maxRotVelocity>1000.0</maxRotVelocity>
+      <motorConstant>1.6691200000000004e-05</motorConstant>
       <momentConstant>0.016</momentConstant>
       <commandSubTopic>command/motor_speed</commandSubTopic>
       <motorNumber>3</motorNumber>
-      <rotorDragCoefficient>1e-06</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-08</rollingMomentCoefficient>
+      <rotorDragCoefficient>3.2e-06</rotorDragCoefficient>
+      <rollingMomentCoefficient>3.2e-08</rollingMomentCoefficient>
       <rotorVelocitySlowdownSim>10.0</rotorVelocitySlowdownSim>
       <motorType>velocity</motorType>
     </plugin>

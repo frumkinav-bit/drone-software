@@ -21,6 +21,7 @@ setup(
             'telemetry_node = uav_telemetry.telemetry_node:main',
             'telemetry_logger = uav_telemetry.telemetry_logger:main',
             'diagnostics_node = uav_telemetry.diagnostics_node:main',
+            'check_telemetry_log = uav_telemetry.telemetry_log_check:main',
         ],
     },
 )

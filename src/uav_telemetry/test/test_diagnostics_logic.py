@@ -50,3 +50,11 @@ def test_alert_not_duplicated():
 def test_worst_level():
     assert worst_level({}) == OK
     assert worst_level(evaluate(15, 0, 'AUTO', [])) == ERROR
+
+
+def test_telemetry_silent():
+    from uav_telemetry.diagnostics_logic import telemetry_silent
+    assert telemetry_silent(None, 100.0) is False   # ещё ни одного сообщения — не считаем молчанием
+    assert telemetry_silent(10.0, 11.0) is False    # 1 с — нормально
+    assert telemetry_silent(10.0, 13.5) is True     # 3.5 с > 3 с
+    assert telemetry_silent(10.0, 15.0, timeout_s=10.0) is False  # свой порог
