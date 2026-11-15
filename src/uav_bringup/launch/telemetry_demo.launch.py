@@ -3,7 +3,8 @@
 Запускать из корня репозитория.
 """
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -15,6 +16,7 @@ def generate_launch_description():
         DeclareLaunchArgument('csv_path', default_value='data/test/sample_telemetry.csv'),
         DeclareLaunchArgument('rate_hz', default_value='1.0'),
         DeclareLaunchArgument('uav_id', default_value='uav_01'),
+        DeclareLaunchArgument('record_bag', default_value='false'),  # true — ещё и писать rosbag2
 
         Node(
             package='uav_autopilot',
@@ -54,5 +56,11 @@ def generate_launch_description():
             name='autopilot_bridge',
             output='screen',
             parameters=[{'source': 'stub'}],
+        ),
+        # Необязательная запись всех тем в rosbag2: record_bag:=true (папка bags/ в текущей директории)
+        ExecuteProcess(
+            cmd=['ros2', 'bag', 'record', '-o', 'bags/' + 'run', '/uav/raw_state', '/uav/telemetry', '/diagnostics'],
+            condition=IfCondition(LaunchConfiguration('record_bag')),
+            output='screen',
         ),
     ])

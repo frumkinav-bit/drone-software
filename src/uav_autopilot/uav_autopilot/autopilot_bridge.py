@@ -27,6 +27,7 @@ class AutopilotBridge(Node):
         # Параметры узла (значения по умолчанию можно менять при запуске)
         self.declare_parameter('source', 'stub')            # 'stub' или 'px4'
         self.declare_parameter('rate_hz', 10.0)             # как часто публиковать /uav/raw_state
+        self.declare_parameter('consider_gcs_loss', True)   # учитывать потерю наземной станции (QGC) как потерю связи
         self.declare_parameter('consider_rc_loss', True)    # учитывать потерю пульта как потерю связи
         self.declare_parameter('weak_rssi_percent', 30)     # ниже этого уровня сигнала связь «слабая»
         # Имена тем PX4. У разных версий PX4 к ним могут добавляться суффиксы (_v1, _v2):
@@ -63,6 +64,7 @@ class AutopilotBridge(Node):
                                   VehicleLocalPosition, VehicleStatus)
         self.VehicleCommand = VehicleCommand
 
+        self.consider_gcs_loss = self.get_parameter('consider_gcs_loss').get_parameter_value().bool_value
         self.consider_rc_loss = self.get_parameter('consider_rc_loss').get_parameter_value().bool_value
         self.weak_rssi = self.get_parameter('weak_rssi_percent').get_parameter_value().integer_value
         self.state = {}  # последние полученные данные: {'status': msg, 'battery': msg, ...}
@@ -113,7 +115,7 @@ class AutopilotBridge(Node):
         roll, pitch, yaw = mapping.quaternion_to_euler_deg(*s['attitude'].q)  # q = [w, x, y, z]
         failsafe = s.get('failsafe')
         rc_lost = bool(failsafe.manual_control_signal_lost) if failsafe and self.consider_rc_loss else False
-        gcs_lost = bool(failsafe.gcs_connection_lost) if failsafe else False
+        gcs_lost = bool(failsafe.gcs_connection_lost) if failsafe and self.consider_gcs_loss else False
         battery = s.get('battery')
 
         msg = RawState()

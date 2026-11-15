@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Генератор SDF-модели квадрокоптера project_quad (версия 0.2).
+Генератор SDF-модели квадрокоптера project_quad (версия 0.4).
 
 Геометрия — CAD-модель рамы группы конструкторов (меши в models/project_quad/meshes).
 Здесь задаются масса, инерция, моторы и сенсоры. Чтобы что-то поменять:
@@ -9,8 +9,12 @@
     2. python3 tools/generate_model.py
     3. перезапустите Gazebo.
 
-Скрипт перезапишет models/project_quad/model.sdf и выведет сводку
-(масса, центр масс, инерция, обороты висения, тяговооружённость).
+Скрипт перезапишет:
+    models/project_quad/model.sdf        — модель;
+    worlds/test_field_stab.sdf           — мир со встроенным стабилизатором Gazebo;
+    px4/4050_gz_project_quad             — настройки (airframe) PX4 SITL под эту раму;
+    tools/hover_speeds.txt               — обороты висения;
+и выведет сводку (масса, центр масс, инерция, обороты висения).
 """
 import math
 from pathlib import Path
@@ -23,27 +27,32 @@ import numpy as np
 
 MODEL_NAME = "project_quad"
 
-# --- Базовая сборка из CAD (рама, моторы-статоры, 4in1 ESC, VTX, приёмник,
-#     аккумулятор 6S 1250 мА·ч, FPV-камера). Масса и инерция посчитаны
-#     конструкторами по мешам (модель g4zo_x2_fpv5, В. Артём).
-BASE_MASS = 0.444
-BASE_COM = (-0.00529, 0.0, 0.03015)
+# --- Компоновка от 8.11.2026 (отчёт конструкторов, этап 4).
+# «Остальная часть дрона без аккумулятора»: рама, моторы-статоры, регулятор
+# 4-в-1, FPV-камера в пазах спереди, VTX сзади, приёмник в кармане основания.
+# Масса и ЦМ — от конструкторов. Инерция — из CAD-модели g4zo_x2 без
+# аккумулятора, развёрнутой на 180° (новое «вперёд» — сторона камеры).
+BASE_MASS = 0.244
+BASE_COM = (0.0, 0.0, 0.0118)
 BASE_INERTIA = np.array([      # относительно BASE_COM
-    [1.579424e-03, 1.868506e-08, 2.868936e-04],
-    [1.868506e-08, 2.113811e-03, 1.835437e-09],
-    [2.868936e-04, 1.835437e-09, 2.121953e-03],
+    [1.357881e-03, 0.0,          -1.469086e-04],
+    [0.0,          1.709809e-03,  0.0],
+    [-1.469086e-04, 0.0,          1.896295e-03],
 ])
 
-# --- Компоненты, которых нет в CAD-сборке (оценки! уточнить у электронщиков).
-#     (имя, масса кг, размеры box м, положение центра м)
+# --- Бортовые компоненты (таблица 1 конструкторов, 8.11).
+#     (имя, масса кг, размеры box м, положение центра м). * — масса уточняется.
 EXTRA_COMPONENTS = [
-    ("Pixhawk 6C Mini",                0.0392, (0.0533, 0.039, 0.0162), (-0.010, 0.0, 0.020)),
-    ("бортовой компьютер (оценка)",    0.045, (0.065, 0.030, 0.010), (-0.040, 0.0, 0.016)),
-    ("радиомодем SiK 433 МГц",         0.025, (0.050, 0.025, 0.010), (-0.060, 0.0, 0.020)),
-    ("модуль питания и провода",       0.030, (0.040, 0.030, 0.010), ( 0.000, 0.0, 0.012)),
-    ("GPS Holybro M9N + мачта",        0.040, (0.050, 0.050, 0.015), (-0.065, 0.0, 0.095)),
-    ("лидар (тестовый, модель не выбрана)", 0.050, (0.040, 0.040, 0.030), (0.045, 0.0, 0.070)),
+    ("аккумулятор 6S 1250",            0.220,  (0.076, 0.036, 0.033),   (-0.0240, 0.0, 0.0525)),
+    ("Pixhawk 6C Mini",                0.0392, (0.0533, 0.039, 0.0162), ( 0.0145, 0.0, 0.0231)),
+    ("бортовой компьютер *",           0.045,  (0.065, 0.030, 0.010),   ( 0.0400, 0.0, 0.0160)),
+    ("радиомодем SiK 433 МГц",         0.025,  (0.050, 0.025, 0.010),   ( 0.0600, 0.0, 0.0200)),
+    ("модуль питания и провода",       0.030,  (0.040, 0.030, 0.010),   ( 0.0000, 0.0, 0.0120)),
+    ("мачта GPS",                      0.015,  (0.008, 0.008, 0.074),   ( 0.0650, 0.0, 0.0730)),
+    ("GPS Holybro M9N",                0.025,  (0.050, 0.050, 0.015),   ( 0.0650, 0.0, 0.1175)),
+    ("лидар на площадке над АКБ *",    0.050,  (0.040, 0.040, 0.030),   (-0.0240, 0.0, 0.0870)),
 ]
+ESC_POSE, ESC_SIZE = (0.0097, 0.0, 0.0115), (0.036, 0.036, 0.007)   # регулятор 4-в-1 (только вид)
 
 # --- Роторы (колокол мотора + пропеллер 5.1", 3 лопасти) — из CAD-модели
 ROTOR_MASS = 0.0199
@@ -67,17 +76,46 @@ ROTORS = [
     (3, -HALF_X, -HALF_Y, "cw"),
 ]
 
-# --- Модель мотора AE2207 V2 1960KV + Gemfan 51499 на 6S (оценка конструкторов):
-#     тяга F = MOTOR_CONSTANT * omega^2; 3200 рад/с -> 16,7 Н (~1700 г)
-MOTOR_CONSTANT = 1.63e-06
-MOMENT_CONSTANT = 0.016
-MAX_ROT_VELOCITY = 3200.0
+# --- Модель мотора AE2207 V2 1960KV + Gemfan 51499 на 6S (оценка конструкторов).
+# Физика: тяга F = k * omega^2, максимум 16,7 Н (~1700 г) на мотор при
+# реальных ~3200 рад/с.
+#
+# !!! PX4 SITL v1.17 не может послать мотору команду больше 1000
+#     (параметр SIM_GZ_EC_MAX ограничен 0…1000). Поэтому в симуляции
+#     обороты МАСШТАБИРОВАНЫ: 1000 «условных» рад/с = 3200 настоящих.
+#     Тяга и моменты те же, меняются только числа в командах моторам.
+REAL_MAX_ROT_VELOCITY = 3200.0     # рад/с, настоящие
+REAL_MOTOR_CONSTANT = 1.63e-06     # Н/(рад/с)², настоящий
+SPEED_SCALE = REAL_MAX_ROT_VELOCITY / 1000.0
+
+MAX_ROT_VELOCITY = 1000.0                                  # условные рад/с
+MOTOR_CONSTANT = REAL_MOTOR_CONSTANT * SPEED_SCALE ** 2    # тяга при условных рад/с
+MOMENT_CONSTANT = 0.016                                    # момент/тяга, не масштабируется
 TIME_CONSTANT_UP = 0.0125
 TIME_CONSTANT_DOWN = 0.025
-ROTOR_DRAG_COEFF = 1.0e-06
-ROLLING_MOMENT_COEFF = 1.0e-08
+ROTOR_DRAG_COEFF = 1.0e-06 * SPEED_SCALE                   # ∝ omega — тоже масштабируется
+ROLLING_MOMENT_COEFF = 1.0e-08 * SPEED_SCALE
 ROTOR_SLOWDOWN_SIM = 10.0
 JOINT_DAMPING = 2.0e-06
+
+# --- PX4 SITL (файл px4/4050_gz_project_quad генерируется отсюда)
+PX4_AIRFRAME_ID = 4050
+PX4_IDLE_SPEED = 70        # условные рад/с на холостом ходу (тяга ~4% веса, как у x500)
+# Общие коэффициенты регуляторов угловой скорости PX4 (MC_*RATE_K).
+# Проверено расчётом (tools/analysis/px4_stability.py, docs/px4_stability.png):
+# со стандартными K = 1 наш лёгкий дрон раскачивается по крену уже при
+# K ≈ 2,5 (запас всего 2,5 раза). K = 0,5 даёт запас в 5 раз при почти той же
+# скорости реакции. Рыскание — стандартное.
+PX4_ROLLPITCH_RATE_K = 0.5
+PX4_YAW_RATE_K = 1.0
+
+# --- Встроенный стабилизатор Gazebo (запасной вариант без PX4)
+#     Коэффициенты из примера Gazebo для X3; внутри делятся на инерцию модели,
+#     поэтому подходят и нашему дрону.
+STAB_VELOCITY_GAIN = (2.7, 2.7, 2.7)
+STAB_ATTITUDE_GAIN = (2.0, 3.0, 0.15)
+STAB_RATE_GAIN = (0.4, 0.52, 0.18)
+STAB_MAX_ACCEL = (2.0, 2.0, 2.0)
 
 # --- Сенсоры. True/False — включить/выключить.
 ENABLE_IMU = True
@@ -104,17 +142,17 @@ ACCEL_BIAS = 0.006           # м/с²
 BARO_NOISE = 1.5             # Па (~0,12 м высоты)
 WORLD_ELEVATION = 150.0      # м, высота начала мира (= <elevation> в test_field.sdf)
 MAG_NOISE = 0.003            # Гс (= 0,3 мкТл). Gazebo выдаёт поле в гауссах, как PX4
-GPS_POS_NOISE_H_M = 0.7      # м. Gazebo применяет этот шум к широте/долготе
+GPS_POS_NOISE_H_M = 0.3      # м. Gazebo применяет этот шум к широте/долготе
 GPS_POS_NOISE_H = GPS_POS_NOISE_H_M / 111320.0   # в ГРАДУСАХ — поэтому пересчёт
-GPS_POS_NOISE_V = 1.2        # м
+GPS_POS_NOISE_V = 0.4        # м
 GPS_VEL_NOISE_H = 0.05       # м/с
 GPS_VEL_NOISE_V = 0.10       # м/с
 LIDAR_NOISE = 0.01           # м
 CAMERA_NOISE = 0.007
 
 # Положение сенсоров (x, y, z, roll, pitch, yaw)
-GPS_POSE = (-0.065, 0.0, 0.103, 0, 0, 0)
-LIDAR_POSE = (0.045, 0.0, 0.085, 0, 0, 0)
+GPS_POSE = (0.065, 0.0, 0.1175, 0, 0, 0)      # центр модуля GPS (8.11)
+LIDAR_POSE = (-0.024, 0.0, 0.098, 0, 0, 0)    # плоскость сканирования 98 мм (8.11)
 DOWN_CAMERA_POSE = (0.030, 0.0, 0.001, 0, math.pi / 2, 0)   # смотрит вниз
 FPV_CAMERA_POSE = (0.086, 0.0, 0.0235, 0, -0.436, 0)
 
@@ -290,14 +328,36 @@ def build():
         mesh_visual("frame_top", "frame_top.stl", "0.22 0.22 0.25 1"),
         mesh_visual("spacers", "spacers.stl", "0.82 0.20 0.16 1"),
         mesh_visual("cam_plates", "cam_plates.stl", "0.31 0.31 0.63 1"),
-        mesh_visual("esc_fc", "esc_fc.stl", "0.10 0.35 0.20 1"),
         mesh_visual("esc_cap", "esc_cap.stl", "0.08 0.08 0.08 1"),
-        mesh_visual("vtx", "vtx.stl", "0.12 0.12 0.12 1"),
         mesh_visual("rx", "rx.stl", "0.08 0.08 0.08 1"),
-        mesh_visual("battery", "battery.stl", "0.12 0.24 0.55 1"),
         mesh_visual("camera", "camera.stl", "0.06 0.06 0.06 1"),
         mesh_visual("motor_stators", "motor_stators.stl", "0.63 0.63 0.67 1"),
     ]
+    # 8.11: VTX перенесён назад (меш разворачиваем на 180°), стек F405 заменён
+    # на регулятор 4-в-1 + Pixhawk 6C Mini, аккумулятор сдвинут на X = -24 мм.
+    batt = next(c for c in EXTRA_COMPONENTS if c[0].startswith("аккумулятор"))
+    pix = next(c for c in EXTRA_COMPONENTS if c[0].startswith("Pixhawk"))
+    lid = next(c for c in EXTRA_COMPONENTS if c[0].startswith("лидар"))
+    visuals.append(f"""      <visual name="vtx">
+        <pose>0 0 0 0 0 3.14159</pose>
+        <geometry><mesh><uri>model://{MODEL_NAME}/meshes/vtx.stl</uri></mesh></geometry>
+        <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse></material>
+      </visual>
+      <visual name="battery">
+        <pose>{pose(batt[3])} 0 0 0</pose>
+        <geometry><box><size>{pose(batt[2])}</size></box></geometry>
+        <material><ambient>0.12 0.24 0.55 1</ambient><diffuse>0.12 0.24 0.55 1</diffuse></material>
+      </visual>
+      <visual name="esc_4in1">
+        <pose>{pose(ESC_POSE)} 0 0 0</pose>
+        <geometry><box><size>{pose(ESC_SIZE)}</size></box></geometry>
+        <material><ambient>0.10 0.35 0.20 1</ambient><diffuse>0.10 0.35 0.20 1</diffuse></material>
+      </visual>
+      <visual name="pixhawk_6c_mini">
+        <pose>{pose(pix[3])} 0 0 0</pose>
+        <geometry><box><size>{pose(pix[2])}</size></box></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>""")
     gx, gy, gz = GPS_POSE[:3]
     visuals.append(f"""      <!-- Заглушки компонентов, которых пока нет в CAD -->
       <visual name="gps_mast">
@@ -311,10 +371,9 @@ def build():
         <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
       </visual>""")
     if ENABLE_LIDAR:
-        lx, ly, lz = LIDAR_POSE[:3]
         visuals.append(f"""      <visual name="lidar_body">
-        <pose>{lx:.4f} {ly:.4f} {(TOP_PLATE_Z + lz - 0.004) / 2:.4f} 0 0 0</pose>
-        <geometry><cylinder><radius>0.018</radius><length>{lz - 0.004 - TOP_PLATE_Z:.4f}</length></cylinder></geometry>
+        <pose>{pose(lid[3])} 0 0 0</pose>
+        <geometry><box><size>{pose(lid[2])}</size></box></geometry>
         <material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material>
       </visual>""")
 
@@ -350,6 +409,7 @@ def build():
         plugins.append(f"""
     <plugin filename="gz-sim-multicopter-motor-model-system"
             name="gz::sim::systems::MulticopterMotorModel">
+      <robotNamespace>{MODEL_NAME}</robotNamespace>
       <jointName>rotor_{idx}_joint</jointName>
       <linkName>rotor_{idx}</linkName>
       <turningDirection>{d}</turningDirection>
@@ -370,14 +430,15 @@ def build():
     total = M + 4 * ROTOR_MASS
     sdf = f"""<?xml version="1.0"?>
 <!--
-  project_quad v0.2 — цифровая модель квадрокоптера проекта.
+  project_quad v0.4 — цифровая модель квадрокоптера проекта.
   ФАЙЛ СГЕНЕРИРОВАН скриптом tools/generate_model.py — правьте параметры там.
 
   Геометрия: CAD-модель группы конструкторов (рама G4ZO x2, 5", диагональ 230,5 мм).
   Единицы СИ. Оси: X вперёд, Y влево, Z вверх. Начало — низ рамы, центр моторов.
-  Порядок моторов: PX4 Quadrotor X.
+  Порядок моторов: PX4 Quadrotor X. Компоновка: отчёт конструкторов от 8.11.2026.
+  Обороты моторов в УСЛОВНЫХ рад/с (1000 = 3200 настоящих), см. генератор.
 
-  Общая масса: {total:.3f} кг. Из них оценки (нет в CAD):
+  Общая масса: {total:.3f} кг. Бортовые компоненты:
 {extras}
 -->
 <sdf version="1.9">
@@ -394,7 +455,7 @@ def build():
         <geometry><box><size>0.195 0.223 0.007</size></box></geometry>
       </collision>
       <collision name="battery_collision">
-        <pose>-0.0225 0 0.0525 0 0 0</pose>
+        <pose>{pose(batt[3])} 0 0 0</pose>
         <geometry><box><size>0.076 0.036 0.033</size></box></geometry>
       </collision>
 {sensors_xml()}
@@ -406,6 +467,121 @@ def build():
 </sdf>
 """
     return sdf, M, com, I, total
+
+
+# ------------------------- PX4 и стабилизатор --------------------------------
+def vehicle_inertia(M, com):
+    """Масса, ЦМ и тензор инерции всего дрона (корпус + роторы) относительно общего ЦМ."""
+    _, _, I_body = combine()
+    parts = [(M, np.asarray(com), I_body)]
+    for _, x, y, _ in ROTORS:
+        parts.append((ROTOR_MASS, np.array([x, y, ROTOR_Z + ROTOR_COM_Z]), np.diag(ROTOR_INERTIA)))
+    mt = sum(m for m, _, _ in parts)
+    cg = sum(m * c for m, c, _ in parts) / mt
+    It = sum(shift(I, m, c - cg) for m, c, I in parts)
+    return mt, cg, It
+
+
+def px4_airframe(mt, K):
+    w_hover = math.sqrt(mt * G / (4 * MOTOR_CONSTANT))
+    thr_hover = (w_hover - PX4_IDLE_SPEED) / (MAX_ROT_VELOCITY - PX4_IDLE_SPEED)
+    lines = [f"""#!/bin/sh
+#
+# @name project_quad (G4ZO x2 5-inch frame)
+#
+# @type Quadrotor
+#
+# GENERATED by simulation/tools/generate_model.py - edit parameters there.
+# Mass {mt:.3f} kg, AE2207 1960KV motors, 5.1-inch props, PX4 Quad X.
+# Install into PX4: bash simulation/tools/px4_setup.sh
+# (file is ASCII-only on purpose: PX4 build parses airframe metadata)
+#
+
+. ${{R}}etc/init.d/rc.mc_defaults
+
+PX4_SIMULATOR=${{PX4_SIMULATOR:=gz}}
+PX4_GZ_WORLD=${{PX4_GZ_WORLD:=test_field}}
+PX4_SIM_MODEL=${{PX4_SIM_MODEL:={MODEL_NAME}}}
+
+param set-default SIM_GZ_EN 1
+
+param set-default CA_AIRFRAME 0
+param set-default CA_ROTOR_COUNT {len(ROTORS)}
+"""]
+    # PX4: оси FRD (X вперёд, Y вправо) -> PY = -y модели. KM > 0 для CCW.
+    lines.append("# Rotor geometry, PX4 body frame FRD (PY = -y of the SDF model)\n")
+    for idx, x, y, d in ROTORS:
+        km = 0.05 if d == "ccw" else -0.05
+        lines.append(f"param set-default CA_ROTOR{idx}_PX {x:.4f}\n"
+                     f"param set-default CA_ROTOR{idx}_PY {-y:.4f}\n"
+                     f"param set-default CA_ROTOR{idx}_KM {km:.2f}\n")
+    for i in range(1, len(ROTORS) + 1):
+        lines.append(f"param set-default SIM_GZ_EC_FUNC{i} {100 + i}\n"
+                     f"param set-default SIM_GZ_EC_MIN{i} {PX4_IDLE_SPEED}\n"
+                     f"param set-default SIM_GZ_EC_MAX{i} {MAX_ROT_VELOCITY:.0f}\n")
+    lines.append(f"""
+# Hover: motors at {w_hover:.0f} of {MAX_ROT_VELOCITY:.0f} scaled rad/s
+# (sim speeds are scaled: 1000 = {REAL_MAX_ROT_VELOCITY:.0f} real rad/s).
+# PX4 refines this in flight (hover thrust estimator).
+param set-default MPC_THR_HOVER {thr_hover:.2f}
+
+# Rate controller global gains (PX4 defaults otherwise).
+# Light 5-inch frame: with K=1 roll oscillation margin is only ~2.5x
+# (offline check, tools/analysis/px4_stability.py); K=0.5 gives ~5x.
+# If it oscillates - decrease K, if sluggish - increase.
+param set-default MC_ROLLRATE_K {K['roll']}
+param set-default MC_PITCHRATE_K {K['pitch']}
+param set-default MC_YAWRATE_K {K['yaw']}
+
+param set-default NAV_DLL_ACT 2
+
+# Simulation only: altitude from barometer, GPS altitude not fused
+# (bit 1 of EKF2_GPS_CTRL off; 7 -> 5). With white GPS altitude noise in
+# Gazebo the EKF shifts its global altitude reference, and mission altitude
+# setpoints drifted 4.1-4.8 m instead of 5 m (flight 14.11). PX4 default is 7.
+param set-default EKF2_GPS_CTRL 5
+""")
+    return "\n".join(lines)
+
+
+def stab_world(root):
+    """Мир test_field_stab.sdf: тот же полигон + встроенный стабилизатор Gazebo."""
+    src = (root / "worlds" / "test_field.sdf").read_text(encoding="utf-8")
+    rotors = "".join(f"""
+          <rotor>
+            <jointName>rotor_{idx}_joint</jointName>
+            <forceConstant>{MOTOR_CONSTANT:.6e}</forceConstant>
+            <momentConstant>{MOMENT_CONSTANT}</momentConstant>
+            <direction>{1 if d == "ccw" else -1}</direction>
+          </rotor>""" for idx, _, _, d in ROTORS)
+    v3 = lambda t: " ".join(f"{x:g}" for x in t)
+    plugin = f"""
+      <!-- Встроенный стабилизатор Gazebo (БЕЗ PX4). Управление: tools/stab_flight.sh
+           Скорость: топик /{MODEL_NAME}/cmd_vel (gz.msgs.Twist),
+           включение: /{MODEL_NAME}/enable (gz.msgs.Boolean). -->
+      <plugin filename="gz-sim-multicopter-control-system"
+              name="gz::sim::systems::MulticopterVelocityControl">
+        <robotNamespace>{MODEL_NAME}</robotNamespace>
+        <commandSubTopic>cmd_vel</commandSubTopic>
+        <enableSubTopic>enable</enableSubTopic>
+        <comLinkName>base_link</comLinkName>
+        <velocityGain>{v3(STAB_VELOCITY_GAIN)}</velocityGain>
+        <attitudeGain>{v3(STAB_ATTITUDE_GAIN)}</attitudeGain>
+        <angularRateGain>{v3(STAB_RATE_GAIN)}</angularRateGain>
+        <maximumLinearAcceleration>{v3(STAB_MAX_ACCEL)}</maximumLinearAcceleration>
+        <maximumLinearVelocity>2 2 2</maximumLinearVelocity>
+        <rotorConfiguration>{rotors}
+        </rotorConfiguration>
+      </plugin>
+    </include>"""
+    marker = f"<uri>model://{MODEL_NAME}</uri>"
+    i = src.index(marker)
+    j = src.index("</include>", i)
+    out = src[:j].rstrip() + plugin + src[j + len("</include>"):]
+    out = out.replace("<sdf version=\"1.9\">",
+                      "<!-- СГЕНЕРИРОВАН tools/generate_model.py из test_field.sdf + стабилизатор Gazebo -->\n"
+                      "<sdf version=\"1.9\">", 1)
+    (root / "worlds" / "test_field_stab.sdf").write_text(out, encoding="utf-8")
 
 
 def main():
@@ -437,6 +613,17 @@ def main():
                          ("GPS", ENABLE_GPS), (f"лидар {LIDAR_MODE}", ENABLE_LIDAR),
                          ("камера вниз", ENABLE_DOWN_CAMERA), ("FPV-камера", ENABLE_FPV_CAMERA)] if f]
     print(f"Сенсоры:                    {', '.join(on)}")
+
+    mt, cg, It = vehicle_inertia(M, com)
+    K = dict(roll=PX4_ROLLPITCH_RATE_K, pitch=PX4_ROLLPITCH_RATE_K, yaw=PX4_YAW_RATE_K)
+    (root / "px4").mkdir(exist_ok=True)
+    af = root / "px4" / f"{PX4_AIRFRAME_ID}_gz_{MODEL_NAME}"
+    af.write_text(px4_airframe(mt, K), encoding="utf-8")
+    stab_world(root)
+    print(f"ЦМ всего дрона:             x={cg[0] * 1000:.1f}  y={cg[1] * 1000:.1f}  z={cg[2] * 1000:.1f} мм")
+    print(f"Инерция всего дрона:        {It[0, 0]:.3e} / {It[1, 1]:.3e} / {It[2, 2]:.3e} кг·м²")
+    print(f"PX4: MC_ROLL/PITCH/YAWRATE_K {K['roll']} / {K['pitch']} / {K['yaw']}  -> {af.relative_to(root)}")
+    print(f"Мир со стабилизатором Gazebo: worlds/test_field_stab.sdf")
 
 
 if __name__ == "__main__":
