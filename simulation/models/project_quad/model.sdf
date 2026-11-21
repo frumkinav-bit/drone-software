@@ -1,35 +1,42 @@
 <?xml version="1.0"?>
 <!--
-  project_quad v0.4 — цифровая модель квадрокоптера проекта.
+  project_quad v0.6 — цифровая модель квадрокоптера проекта.
   ФАЙЛ СГЕНЕРИРОВАН скриптом tools/generate_model.py — правьте параметры там.
 
   Геометрия: CAD-модель группы конструкторов (рама G4ZO x2, 5", диагональ 230,5 мм).
   Единицы СИ. Оси: X вперёд, Y влево, Z вверх. Начало — низ рамы, центр моторов.
-  Порядок моторов: PX4 Quadrotor X. Компоновка: отчёт конструкторов от 8.11.2026.
+  Порядок моторов: PX4 Quadrotor X. Компоновка: отчёт конструкторов от 16.11.2026.
   Обороты моторов в УСЛОВНЫХ рад/с (1000 = 3200 настоящих), см. генератор.
 
-  Общая масса: 0.773 кг. Бортовые компоненты:
-       - аккумулятор 6S 1250: 220 г
-       - Pixhawk 6C Mini: 39 г
-       - бортовой компьютер *: 45 г
-       - радиомодем SiK 433 МГц: 25 г
-       - модуль питания и провода: 30 г
-       - мачта GPS: 15 г
-       - GPS Holybro M9N: 25 г
-       - лидар на площадке над АКБ *: 50 г
+  Общая масса: 0.810 кг. Бортовые компоненты:
+       - аккумулятор 6S 1250: 220.0 г
+       - Pixhawk 6C Mini: 39.2 г
+       - бортовой компьютер *: 45.0 г
+       - радиомодем SiK 433 МГц: 25.0 г
+       - модуль питания и провода: 30.0 г
+       - мачта GPS: 15.0 г
+       - GPS Holybro M9N: 25.0 г
+       - лидар на кронштейне *: 50.0 г
+       - кронштейн лидара со стойками: 14.6 г
+       - кронштейн мачты GPS: 5.0 г
+       - ремень, втулки, стойки плат: 2.7 г
+       - опора 1: 3.7 г
+       - опора 2: 3.7 г
+       - опора 3: 3.7 г
+       - опора 4: 3.7 г
 -->
 <sdf version="1.9">
   <model name="project_quad">
-    <pose>0 0 0.02 0 0 0</pose>
+    <pose>0 0 0.035 0 0 0</pose>
 
     <link name="base_link">
       <inertial>
-        <pose>-0.00002 0.00000 0.03649 0 0 0</pose>
-        <mass>0.69320</mass>
+        <pose>-0.00000 0.00000 0.03432 0 0 0</pose>
+        <mass>0.73030</mass>
         <inertia>
-          <ixx>2.005678e-03</ixx><ixy>0.000000e+00</ixy><ixz>-9.977446e-05</ixz>
-          <iyy>2.956938e-03</iyy><iyz>0.000000e+00</iyz>
-          <izz>2.590848e-03</izz>
+          <ixx>2.299788e-03</ixx><ixy>-3.388132e-21</ixy><ixz>-1.879191e-04</ixz>
+          <iyy>3.161904e-03</iyy><iyz>0.000000e+00</iyz>
+          <izz>2.733932e-03</izz>
         </inertia>
       </inertial>
       <visual name="frame_base">
@@ -70,24 +77,24 @@
         <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse></material>
       </visual>
       <visual name="battery">
-        <pose>-0.0240 0.0000 0.0525 0 0 0</pose>
+        <pose>-0.0080 0.0000 0.0525 0 0 0</pose>
         <geometry><box><size>0.0760 0.0360 0.0330</size></box></geometry>
         <material><ambient>0.12 0.24 0.55 1</ambient><diffuse>0.12 0.24 0.55 1</diffuse></material>
       </visual>
       <visual name="esc_4in1">
-        <pose>0.0097 0.0000 0.0115 0 0 0</pose>
+        <pose>0.0097 0.0000 0.0105 0 0 0</pose>
         <geometry><box><size>0.0360 0.0360 0.0070</size></box></geometry>
         <material><ambient>0.10 0.35 0.20 1</ambient><diffuse>0.10 0.35 0.20 1</diffuse></material>
       </visual>
       <visual name="pixhawk_6c_mini">
-        <pose>0.0145 0.0000 0.0231 0 0 0</pose>
+        <pose>0.0145 0.0000 0.0226 0 0 0</pose>
         <geometry><box><size>0.0533 0.0390 0.0162</size></box></geometry>
         <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
       </visual>
       <!-- Заглушки компонентов, которых пока нет в CAD -->
       <visual name="gps_mast">
-        <pose>0.0650 0.0000 0.0730 0 0 0</pose>
-        <geometry><cylinder><radius>0.004</radius><length>0.0740</length></cylinder></geometry>
+        <pose>0.0650 0.0000 0.0775 0 0 0</pose>
+        <geometry><cylinder><radius>0.004</radius><length>0.0650</length></cylinder></geometry>
         <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
       </visual>
       <visual name="gps_puck">
@@ -96,19 +103,85 @@
         <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
       </visual>
       <visual name="lidar_body">
-        <pose>-0.0240 0.0000 0.0870 0 0 0</pose>
+        <pose>-0.0240 0.0000 0.0885 0 0 0</pose>
         <geometry><box><size>0.0400 0.0400 0.0300</size></box></geometry>
         <material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material>
       </visual>
+      <visual name="companion">
+        <pose>0.0445 0.0000 -0.0100 0 0 0</pose>
+        <geometry><box><size>0.0650 0.0300 0.0100</size></box></geometry>
+        <material><ambient>0.15 0.45 0.20 1</ambient><diffuse>0.15 0.45 0.20 1</diffuse></material>
+      </visual>
+      <visual name="sik_modem">
+        <pose>-0.0450 0.0000 -0.0100 0 0 0</pose>
+        <geometry><box><size>0.0500 0.0250 0.0100</size></box></geometry>
+        <material><ambient>0.25 0.25 0.55 1</ambient><diffuse>0.25 0.25 0.55 1</diffuse></material>
+      </visual>
+      <visual name="power_module">
+        <pose>-0.0410 0.0000 0.0270 0 0 0</pose>
+        <geometry><box><size>0.0400 0.0300 0.0100</size></box></geometry>
+        <material><ambient>0.55 0.30 0.15 1</ambient><diffuse>0.55 0.30 0.15 1</diffuse></material>
+      </visual>
+      <visual name="lidar_bridge">
+        <pose>-0.0082 0.0000 0.0722 0 0 0</pose>
+        <geometry><box><size>0.0925 0.0390 0.0025</size></box></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>
+      <visual name="gps_bracket">
+        <pose>0.0565 0.0000 0.0405 0 0 0</pose>
+        <geometry><box><size>0.0310 0.0340 0.0090</size></box></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>
+      <visual name="leg_0">
+        <pose>0.0750 -0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>
+      <visual name="leg_1">
+        <pose>-0.0750 0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>
+      <visual name="leg_2">
+        <pose>0.0750 0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>
+      <visual name="leg_3">
+        <pose>-0.0750 -0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>
+      <visual name="down_camera_body">
+        <pose>-0.0040 0.0000 -0.0060 0 0 0</pose>
+        <geometry><box><size>0.0250 0.0240 0.0120</size></box></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+      </visual>
 
-      <!-- Коллизия: пластина рамы + аккумулятор -->
+      <!-- Коллизия: пластина рамы + аккумулятор + опоры (дрон стоит на опорах) -->
       <collision name="frame_collision">
         <pose>0 0 0.0035 0 0 0</pose>
         <geometry><box><size>0.195 0.223 0.007</size></box></geometry>
       </collision>
       <collision name="battery_collision">
-        <pose>-0.0240 0.0000 0.0525 0 0 0</pose>
+        <pose>-0.0080 0.0000 0.0525 0 0 0</pose>
         <geometry><box><size>0.076 0.036 0.033</size></box></geometry>
+      </collision>
+      <collision name="leg_0_collision">
+        <pose>0.0750 -0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
+      </collision>
+      <collision name="leg_1_collision">
+        <pose>-0.0750 0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
+      </collision>
+      <collision name="leg_2_collision">
+        <pose>0.0750 0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
+      </collision>
+      <collision name="leg_3_collision">
+        <pose>-0.0750 -0.0875 -0.0150 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>0.0300</length></cylinder></geometry>
       </collision>
 
       <!-- IMU (на Pixhawk 6C Mini). Имя imu_sensor — как ждёт PX4 SITL. -->
@@ -158,7 +231,7 @@
 
       <!-- Тестовый лидар (2D). Модель лидара ещё не выбрана электронщиками. -->
       <sensor name="lidar_sensor" type="gpu_lidar">
-        <pose>-0.0240 0.0000 0.0980 0.0000 0.0000 0.0000</pose>
+        <pose>-0.0240 0.0000 0.0995 0.0000 0.0000 0.0000</pose>
         <topic>project_quad/lidar</topic>
         <always_on>1</always_on>
         <update_rate>10</update_rate>
@@ -175,7 +248,7 @@
 
       <!-- Камера вниз 1280x720 (формат тестовых данных группы CV) -->
       <sensor name="down_camera" type="camera">
-        <pose>0.0300 0.0000 0.0010 0.0000 1.5708 0.0000</pose>
+        <pose>-0.0040 0.0000 -0.0130 0.0000 1.5708 0.0000</pose>
         <topic>project_quad/camera_down/image</topic>
         <always_on>1</always_on>
         <update_rate>15</update_rate>

@@ -32,9 +32,9 @@ class AutopilotBridge(Node):
         self.declare_parameter('weak_rssi_percent', 30)     # ниже этого уровня сигнала связь «слабая»
         # Имена тем PX4. У разных версий PX4 к ним могут добавляться суффиксы (_v1, _v2):
         # настоящие имена показывает команда `ros2 topic list`
-        self.declare_parameter('topic_vehicle_status', '/fmu/out/vehicle_status')
-        self.declare_parameter('topic_battery', '/fmu/out/battery_status')
-        self.declare_parameter('topic_local_position', '/fmu/out/vehicle_local_position')
+        self.declare_parameter('topic_vehicle_status', '/fmu/out/vehicle_status_v1')  # в PX4 v1.17 у темы суффикс _v1
+        self.declare_parameter('topic_battery', '/fmu/out/battery_status_v1')
+        self.declare_parameter('topic_local_position', '/fmu/out/vehicle_local_position_v1')
         self.declare_parameter('topic_global_position', '/fmu/out/vehicle_global_position')
         self.declare_parameter('topic_attitude', '/fmu/out/vehicle_attitude')
         self.declare_parameter('topic_failsafe', '/fmu/out/failsafe_flags')

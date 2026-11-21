@@ -4,7 +4,7 @@
 Нужны: собранный px4_msgs (ветка release/1.17), запущенный Micro XRCE-DDS Agent и PX4.
 Запускать на ноутбуке группы моделирования, рядом с симуляцией, из корня репозитория:
 
-  ros2 launch uav_bringup autopilot_px4.launch.py use_sim_time:=true consider_rc_loss:=false consider_gcs_loss:=false
+  ros2 launch uav_bringup autopilot_px4.launch.py use_sim_time:=true consider_rc_loss:=false consider_gcs_loss:=false lidar:=true
 
 Значения true и false пишутся с маленькой буквы.
 """
@@ -27,7 +27,9 @@ def generate_launch_description():
         # Без QGroundControl PX4 считает наземную станцию потерянной; тогда пишем consider_gcs_loss:=false
         DeclareLaunchArgument('consider_gcs_loss', default_value='true'),
         DeclareLaunchArgument('uav_id', default_value='uav_01'),
-        DeclareLaunchArgument('record_bag', default_value='false'),  # true — ещё и писать rosbag2
+        DeclareLaunchArgument('record_bag', default_value='false'),
+        # true — ещё и запустить lidar_processor (нужна тема /lidar/scan из моста Gazebo)
+        DeclareLaunchArgument('lidar', default_value='false'),  # true — ещё и писать rosbag2
 
         Node(
             package='uav_autopilot',
@@ -64,6 +66,15 @@ def generate_launch_description():
             name='diagnostics_node',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time}],
+        ),
+        # Обработка лидара: только если lidar:=true, иначе без лидара сразу сработает LIDAR_LOST
+        Node(
+            package='uav_lidar',
+            executable='lidar_processor',
+            name='lidar_processor',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+            condition=IfCondition(LaunchConfiguration('lidar')),
         ),
         # Необязательная запись всех тем в rosbag2: record_bag:=true (папка bags/ в текущей директории)
         ExecuteProcess(

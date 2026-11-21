@@ -40,6 +40,11 @@ ros2 run uav_telemetry check_telemetry_log telemetry_logs/<файл>.csv --sourc
 Полёт по маршруту моделирования: `csv_path:=data/test/sample_mission.csv`.
 Дополнительно записать всё в rosbag2: `record_bag:=true` (папка `bags/run`; воспроизведение — `ros2 bag play bags/run`).
 
+## Демо лидара
+
+`ros2 launch uav_bringup lidar_demo.launch.py` — то же демо плюс искусственный скан лидара и узел `lidar_processor`.
+Подробности и ожидаемые сообщения — в [lidar.md](lidar.md).
+
 ## Сообщение RawState
 
 `/uav/raw_state` — состояние от автопилота. Поля те же, что в `Telemetry`, но без `uav_id` и `mission_status`:
@@ -49,4 +54,4 @@ ros2 run uav_telemetry check_telemetry_log telemetry_logs/<файл>.csv --sourc
 
 - QoS для тем `/uav/*` сейчас по умолчанию (reliable); для тем PX4 `/fmu/out/*` мост уже использует best effort.
 - Данные в `data/test/` синтетические.
-- Тесты: `python3 -m pytest src/uav_autopilot/test src/uav_telemetry/test` (чтение CSV, диагностика, проверка журнала).
+- Тесты: `python3 -m pytest src/uav_autopilot/test src/uav_telemetry/test src/uav_lidar/test` (чтение CSV, диагностика, проверка журнала, обработка лидара).

@@ -29,3 +29,10 @@
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   direction: GZ_TO_ROS
+
+# Параметры камеры вниз (разрешение, фокусное расстояние)
+- ros_topic_name: "/camera/down/camera_info"
+  gz_topic_name: "/project_quad/camera_down/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
