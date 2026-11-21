@@ -265,7 +265,7 @@
     <include>
       <uri>model://project_quad</uri>
       <name>project_quad</name>
-      <pose>0 0 0.012 0 0 0</pose>
+      <pose>0 0 0.045 0 0 0</pose>
       <!-- Встроенный стабилизатор Gazebo (БЕЗ PX4). Управление: tools/stab_flight.sh
            Скорость: топик /project_quad/cmd_vel (gz.msgs.Twist),
            включение: /project_quad/enable (gz.msgs.Boolean). -->

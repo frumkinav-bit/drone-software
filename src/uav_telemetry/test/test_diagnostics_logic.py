@@ -58,3 +58,12 @@ def test_telemetry_silent():
     assert telemetry_silent(10.0, 11.0) is False    # 1 с — нормально
     assert telemetry_silent(10.0, 13.5) is True     # 3.5 с > 3 с
     assert telemetry_silent(10.0, 15.0, timeout_s=10.0) is False  # свой порог
+
+
+def test_lidar_alerts_have_levels():
+    from uav_telemetry.diagnostics_logic import ERROR, WARN, evaluate
+    problems = evaluate(80, 2, 'MISSION', ['OBSTACLE_NEAR', 'OBSTACLE_CLOSE', 'LIDAR_LOST', 'SOMETHING_ELSE'])
+    assert problems['OBSTACLE_NEAR'][0] == WARN
+    assert problems['OBSTACLE_CLOSE'][0] == ERROR
+    assert problems['LIDAR_LOST'][0] == ERROR
+    assert problems['SOMETHING_ELSE'][0] == WARN      # неизвестный код — как раньше, предупреждение

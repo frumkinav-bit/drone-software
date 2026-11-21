@@ -40,8 +40,10 @@ Micro XRCE-DDS Agent
 ## Чтение: темы PX4 → поля RawState
 
 Подписка на темы PX4 идёт с QoS `best effort` (`qos_profile_sensor_data`), иначе данные не приходят.
-Имена тем можно поменять параметрами узла (у разных версий PX4 к именам добавляются суффиксы `_v1`, `_v2`:
-настоящие имена показывает `ros2 topic list`).
+Имена тем можно поменять параметрами узла. По данным группы моделирования (проверено на PX4 v1.17.0 SITL,
+`simulation/docs/telemetry_lidar.md`), у части тем есть суффикс `_v1`: `vehicle_status_v1`, `vehicle_local_position_v1`,
+`battery_status_v1` (и `home_position_v1`). У остальных суффикса нет: `vehicle_global_position`, `vehicle_attitude`,
+`failsafe_flags`. Эти имена стоят в параметрах по умолчанию; тип сообщения остаётся прежним (`VehicleStatus` и т. д.).
 
 | Поле RawState | Откуда берём | Как считаем |
 | --- | --- | --- |
@@ -152,7 +154,7 @@ ros2 topic pub --once /uav/command uav_interfaces/msg/Command "{command: 5, mode
 | `consider_rc_loss` | `true` | учитывать потерю пульта как потерю связи |
 | `consider_gcs_loss` | `true` | учитывать потерю наземной станции (QGC) как потерю связи; в симуляции без QGC ставим `false` |
 | `weak_rssi_percent` | `30` | ниже этого уровня сигнала связь считается слабой |
-| `topic_vehicle_status`, `topic_battery`, `topic_local_position`, `topic_global_position`, `topic_attitude`, `topic_failsafe`, `topic_command` | `/fmu/out/...`, `/fmu/in/vehicle_command` | имена тем PX4 |
+| `topic_vehicle_status`, `topic_battery`, `topic_local_position`, `topic_global_position`, `topic_attitude`, `topic_failsafe`, `topic_command` | `/fmu/out/vehicle_status_v1`, `battery_status_v1`, `vehicle_local_position_v1`, остальные без суффикса, `/fmu/in/vehicle_command` | имена тем PX4 |
 
 Узел `diagnostics_node` принимает параметры `battery_warn_percent` (15), `battery_error_percent` (7) и `telemetry_timeout_s` (3.0 — через сколько секунд тишины сообщаем `TELEMETRY_LOST`).
 Значения по умолчанию совпадают с настройками PX4 по умолчанию (`BAT_LOW_THR` 15%, `BAT_CRIT_THR` 7%).
@@ -205,7 +207,7 @@ ros2 topic pub --once /uav/command uav_interfaces/msg/Command "{command: 3}"
 
 Режим `px4` и перевод данных написаны по документации и не проверены с PX4 v1.17.0. При первом запуске нужно:
 
-1. Сверить имена тем: `ros2 topic list | grep fmu`. Если есть суффиксы (`_v1` и т. п.), передать имена параметрами.
+1. Сверить имена тем: `ros2 topic list | grep fmu` (в v0.6 группа моделирования подтвердила суффиксы `_v1`, они уже стоят по умолчанию; проверить, что мост получает данные).
 2. Сверить номера `nav_state` с файлом `VehicleStatus.msg` из `px4_msgs` (ветка `release/1.17`) и поправить `NAV_STATE_TO_MODE` в `px4_mapping.py`.
 3. Сверить имена полей `FailsafeFlags` (`manual_control_signal_lost`, `gcs_connection_lost`) и `BatteryStatus` (`remaining`, `voltage_v`).
 4. Проверить команды: `ARM`, `TAKEOFF`, `LAND`, `RTL`, `SET_MODE` на SITL.

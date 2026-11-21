@@ -104,6 +104,7 @@ def heartbeat(m):
 def monitor(m, items, timeout=600):
     was_armed = False
     reached = set()          # PX4 повторяет MISSION_ITEM_REACHED — печатаем один раз
+    max_alt = 0.0
     t0 = time.time()
     last_hb = last_pos = 0.0
     while time.time() - t0 < timeout:
@@ -121,7 +122,9 @@ def monitor(m, items, timeout=600):
             print(f"[{now - t0:5.1f} с] достигнут пункт {msg.seq}: {items[msg.seq][0]}")
         elif typ == "STATUSTEXT":
             print(f"[{now - t0:5.1f} с] PX4: {msg.text}")
-        elif typ == "GLOBAL_POSITION_INT" and now - last_pos > 3 and was_armed:
+        elif typ == "GLOBAL_POSITION_INT":
+            max_alt = max(max_alt, msg.relative_alt / 1000)
+        if typ == "GLOBAL_POSITION_INT" and now - last_pos > 3 and was_armed:
             print(f"[{now - t0:5.1f} с]   высота {msg.relative_alt / 1000:4.1f} м")
             last_pos = now
         elif typ == "HEARTBEAT" and msg.get_srcSystem() == m.target_system \
@@ -130,7 +133,12 @@ def monitor(m, items, timeout=600):
             if armed and not was_armed:
                 print(f"[{now - t0:5.1f} с] моторы включены, маршрут начат")
             if was_armed and not armed:
-                print(f"[{now - t0:5.1f} с] посадка, моторы выключены — маршрут выполнен")
+                if max_alt < 1.0:
+                    print(f"[{now - t0:5.1f} с] моторы выключены, но дрон НЕ ВЗЛЕТЕЛ "
+                          f"(высота не больше {max_alt:.1f} м). Сообщения PX4 — в окне 2.")
+                    return False
+                print(f"[{now - t0:5.1f} с] посадка, моторы выключены — маршрут выполнен "
+                      f"(наибольшая высота {max_alt:.1f} м)")
                 return True
             was_armed = armed
     print("Время ожидания вышло.")
@@ -160,6 +168,14 @@ def main():
     if args.upload_only:
         print("Запуск: в pxh — commander mode auto:mission, затем commander arm.")
         return
+
+    # Начать с первого пункта. PX4 помнит, где закончилась прошлая миссия (даже после
+    # перезапуска), и при загрузке такого же маршрута продолжает с того же пункта —
+    # например, сразу с посадки. Поэтому явно ставим текущим пункт 0.
+    if not command(m, M.MAV_CMD_DO_SET_MISSION_CURRENT, 0, 1):
+        m.mav.mission_set_current_send(m.target_system, m.target_component, 0)
+        time.sleep(0.5)
+    print("Текущий пункт маршрута: 0 (взлёт).")
 
     # Режим Mission: PX4 custom mode AUTO (4) / MISSION (4), как делает QGroundControl
     if not command(m, M.MAV_CMD_DO_SET_MODE, M.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, 4, 4):

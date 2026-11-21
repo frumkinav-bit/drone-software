@@ -14,9 +14,10 @@ test_data_player  →  /uav/raw_state  →  telemetry_node  →  /uav/telemetry 
 
 | Папка или файл | Что это |
 | --- | --- |
-| `src/uav_interfaces/` | описание сообщений (`Telemetry.msg`, `RawState.msg`) |
+| `src/uav_interfaces/` | описание сообщений (`Telemetry.msg`, `RawState.msg`, `Command.msg`, `LidarStatus.msg`) |
 | `src/uav_autopilot/` | узел `test_data_player`: воспроизводит тестовые данные как автопилот |
-| `src/uav_telemetry/` | узлы `telemetry_node` и `telemetry_logger` |
+| `src/uav_telemetry/` | узлы `telemetry_node`, `telemetry_logger`, `diagnostics_node` и проверка журнала |
+| `src/uav_lidar/` | узел `lidar_processor` (обработка лидара) и имитатор скана для демо |
 | `src/uav_bringup/` | launch-файл: запуск всех узлов одной командой |
 | `data/test/` | тестовые данные (CSV, синтетические) |
 | `docs/` | документация (список ниже) |
@@ -26,8 +27,10 @@ test_data_player  →  /uav/raw_state  →  telemetry_node  →  /uav/telemetry 
 
 | Узел | Статус |
 | --- | --- |
-| `test_data_player`, `telemetry_node`, `telemetry_logger` | готово, проверено на тестовых данных |
-| `diagnostics_node`, `autopilot_bridge`, `lidar_processor`, `mission_manager` | запланированы, сроки в [docs/plan.md](docs/plan.md) |
+| `test_data_player`, `telemetry_node`, `telemetry_logger`, `diagnostics_node` | готово, проверено на тестовых данных |
+| `autopilot_bridge` | заглушка проверена, режим px4 ждёт проверки на SITL (этап 30 ноября) |
+| `lidar_processor` | готово, проверено на тестах и искусственном скане ([docs/lidar.md](docs/lidar.md)) |
+| `mission_manager` | запланирован, срок в [docs/plan.md](docs/plan.md) |
 
 ## Быстрый старт
 
@@ -136,4 +139,4 @@ ros2 topic echo /uav/telemetry
 
 ## Gazebo (симуляция)
 
-Цифровая модель квадрокоптера и тестовый мир лежат в папке `simulation/`, запуск описан в `simulation/README.md`. Gazebo запускается на ноутбуке группы моделирования (Windows + WSL2). Версия папки — v0.5 (маршрут, стабилизация, скрипты PX4).
+Цифровая модель квадрокоптера и тестовый мир лежат в папке `simulation/`, запуск описан в `simulation/README.md`. Gazebo запускается на ноутбуке группы моделирования (Windows + WSL2). Версия папки — v0.6 (маршрут, телеметрия и лидар в ROS 2, запись полёта).

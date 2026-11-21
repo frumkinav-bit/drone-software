@@ -15,6 +15,14 @@ LOW_BATTERY_WARN = 15   # ниже этого заряда (%) — предуп�
 LOW_BATTERY_ERROR = 7   # ниже этого заряда (%) — серьёзная проблема
 
 
+# Известные аварийные коды от других узлов: код -> (уровень, текст для оператора)
+ALERT_INFO = {
+    'OBSTACLE_NEAR': (WARN, 'Препятствие рядом (по данным лидара)'),
+    'OBSTACLE_CLOSE': (ERROR, 'Препятствие очень близко (по данным лидара)'),
+    'LIDAR_LOST': (ERROR, 'Нет данных лидара'),
+}
+
+
 def evaluate(battery_percent, link_state, flight_mode, alerts,
              battery_warn=LOW_BATTERY_WARN, battery_error=LOW_BATTERY_ERROR):
     """Проверяет один набор данных телеметрии.
@@ -48,7 +56,8 @@ def evaluate(battery_percent, link_state, flight_mode, alerts,
     # Аварийные события из самого сообщения; повторы уже найденных не добавляем
     for code in alerts:
         if code not in problems:
-            problems[code] = (WARN, f'Аварийное событие: {code}')
+            # Известные коды берём из таблицы ALERT_INFO, неизвестные — общее предупреждение
+            problems[code] = ALERT_INFO.get(code, (WARN, f'Аварийное событие: {code}'))
 
     return problems
 

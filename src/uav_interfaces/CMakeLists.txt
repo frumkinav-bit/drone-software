@@ -9,6 +9,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Telemetry.msg"
   "msg/RawState.msg"
   "msg/Command.msg"
+  "msg/LidarStatus.msg"
   DEPENDENCIES std_msgs
 )
 

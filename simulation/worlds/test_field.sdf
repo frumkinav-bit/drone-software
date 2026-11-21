@@ -264,7 +264,7 @@
     <include>
       <uri>model://project_quad</uri>
       <name>project_quad</name>
-      <pose>0 0 0.012 0 0 0</pose>
+      <pose>0 0 0.045 0 0 0</pose>
     </include>
 
   </world>

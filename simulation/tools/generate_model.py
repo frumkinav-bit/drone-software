@@ -27,7 +27,7 @@ import numpy as np
 
 MODEL_NAME = "project_quad"
 
-# --- Компоновка от 8.11.2026 (отчёт конструкторов, этап 4).
+# --- Компоновка от 8.11.2026, в 16.11 не менялась (отчёт конструкторов, этапы 4–5).
 # «Остальная часть дрона без аккумулятора»: рама, моторы-статоры, регулятор
 # 4-в-1, FPV-камера в пазах спереди, VTX сзади, приёмник в кармане основания.
 # Масса и ЦМ — от конструкторов. Инерция — из CAD-модели g4zo_x2 без
@@ -40,19 +40,32 @@ BASE_INERTIA = np.array([      # относительно BASE_COM
     [-1.469086e-04, 0.0,          1.896295e-03],
 ])
 
-# --- Бортовые компоненты (таблица 1 конструкторов, 8.11).
-#     (имя, масса кг, размеры box м, положение центра м). * — масса уточняется.
+# --- Опоры (16.11): под каждым мотором фланец 22x22x2 + труба Ø12.
+#     Дрон стоит на опорах, нижняя точка Z = -LEG_HEIGHT. Конструкторы обсуждают
+#     удлинение до 40 мм под бортовой компьютер — тогда LEG_HEIGHT = 0.040.
+LEG_HEIGHT = 0.030
+LEGS_MASS = 0.0148            # все 4 опоры
+
+# --- Бортовые компоненты и крепления (компоновка конструкторов от 16.11).
+#     (имя, масса кг, размеры box м, положение центра м). * — модель не выбрана.
 EXTRA_COMPONENTS = [
-    ("аккумулятор 6S 1250",            0.220,  (0.076, 0.036, 0.033),   (-0.0240, 0.0, 0.0525)),
-    ("Pixhawk 6C Mini",                0.0392, (0.0533, 0.039, 0.0162), ( 0.0145, 0.0, 0.0231)),
-    ("бортовой компьютер *",           0.045,  (0.065, 0.030, 0.010),   ( 0.0400, 0.0, 0.0160)),
-    ("радиомодем SiK 433 МГц",         0.025,  (0.050, 0.025, 0.010),   ( 0.0600, 0.0, 0.0200)),
-    ("модуль питания и провода",       0.030,  (0.040, 0.030, 0.010),   ( 0.0000, 0.0, 0.0120)),
-    ("мачта GPS",                      0.015,  (0.008, 0.008, 0.074),   ( 0.0650, 0.0, 0.0730)),
+    ("аккумулятор 6S 1250",            0.220,  (0.076, 0.036, 0.033),   (-0.0080, 0.0, 0.0525)),
+    ("Pixhawk 6C Mini",                0.0392, (0.0533, 0.039, 0.0162), ( 0.0145, 0.0, 0.0226)),
+    ("бортовой компьютер *",           0.045,  (0.065, 0.030, 0.010),   ( 0.0445, 0.0, -0.0100)),
+    ("радиомодем SiK 433 МГц",         0.025,  (0.050, 0.025, 0.010),   (-0.0450, 0.0, -0.0100)),
+    ("модуль питания и провода",       0.030,  (0.040, 0.030, 0.010),   (-0.0410, 0.0, 0.0270)),
+    ("мачта GPS",                      0.015,  (0.008, 0.008, 0.065),   ( 0.0650, 0.0, 0.0775)),
     ("GPS Holybro M9N",                0.025,  (0.050, 0.050, 0.015),   ( 0.0650, 0.0, 0.1175)),
-    ("лидар на площадке над АКБ *",    0.050,  (0.040, 0.040, 0.030),   (-0.0240, 0.0, 0.0870)),
+    ("лидар на кронштейне *",          0.050,  (0.040, 0.040, 0.030),   (-0.0240, 0.0, 0.0885)),
+    ("кронштейн лидара со стойками",   0.0146, (0.0925, 0.039, 0.0025), (-0.0082, 0.0, 0.0722)),
+    ("кронштейн мачты GPS",            0.0050, (0.031, 0.034, 0.009),   ( 0.0565, 0.0, 0.0405)),
+    ("ремень, втулки, стойки плат",    0.0027, (0.020, 0.036, 0.010),   (-0.0080, 0.0, 0.0300)),
+] + [
+    (f"опора {i + 1}", LEGS_MASS / 4, (0.012, 0.012, LEG_HEIGHT),
+     (sx * 0.0750, sy * 0.0875, -LEG_HEIGHT / 2))
+    for i, (sx, sy) in enumerate(((1, -1), (-1, 1), (1, 1), (-1, -1)))
 ]
-ESC_POSE, ESC_SIZE = (0.0097, 0.0, 0.0115), (0.036, 0.036, 0.007)   # регулятор 4-в-1 (только вид)
+ESC_POSE, ESC_SIZE = (0.0097, 0.0, 0.0105), (0.036, 0.036, 0.007)   # регулятор 4-в-1 (только вид)
 
 # --- Роторы (колокол мотора + пропеллер 5.1", 3 лопасти) — из CAD-модели
 ROTOR_MASS = 0.0199
@@ -151,9 +164,13 @@ LIDAR_NOISE = 0.01           # м
 CAMERA_NOISE = 0.007
 
 # Положение сенсоров (x, y, z, roll, pitch, yaw)
-GPS_POSE = (0.065, 0.0, 0.1175, 0, 0, 0)      # центр модуля GPS (8.11)
-LIDAR_POSE = (-0.024, 0.0, 0.098, 0, 0, 0)    # плоскость сканирования 98 мм (8.11)
-DOWN_CAMERA_POSE = (0.030, 0.0, 0.001, 0, math.pi / 2, 0)   # смотрит вниз
+GPS_POSE = (0.065, 0.0, 0.1175, 0, 0, 0)      # центр модуля GPS (16.11)
+LIDAR_POSE = (-0.024, 0.0, 0.0995, 0, 0, 0)   # плоскость сканирования 99,5 мм (16.11)
+# Камера вниз — под основанием, место X -20…12 мм, Y ±15 мм (16.11). Условно
+# Raspberry Pi Camera Module 3 (25x24x12 мм, угол ~66°). Закреплена жёстко:
+# строго вниз смотрит при висении, в наклоне — вместе с корпусом.
+DOWN_CAMERA_SIZE = (0.025, 0.024, 0.012)
+DOWN_CAMERA_POSE = (-0.004, 0.0, -0.013, 0, math.pi / 2, 0)   # объектив под низом камеры
 FPV_CAMERA_POSE = (0.086, 0.0, 0.0235, 0, -0.436, 0)
 
 TOP_PLATE_Z = 0.036          # верх верхней пластины рамы (из CAD)
@@ -338,6 +355,7 @@ def build():
     batt = next(c for c in EXTRA_COMPONENTS if c[0].startswith("аккумулятор"))
     pix = next(c for c in EXTRA_COMPONENTS if c[0].startswith("Pixhawk"))
     lid = next(c for c in EXTRA_COMPONENTS if c[0].startswith("лидар"))
+    mast = next(c for c in EXTRA_COMPONENTS if c[0].startswith("мачта"))
     visuals.append(f"""      <visual name="vtx">
         <pose>0 0 0 0 0 3.14159</pose>
         <geometry><mesh><uri>model://{MODEL_NAME}/meshes/vtx.stl</uri></mesh></geometry>
@@ -361,8 +379,8 @@ def build():
     gx, gy, gz = GPS_POSE[:3]
     visuals.append(f"""      <!-- Заглушки компонентов, которых пока нет в CAD -->
       <visual name="gps_mast">
-        <pose>{gx:.4f} {gy:.4f} {(TOP_PLATE_Z + gz - 0.0075) / 2:.4f} 0 0 0</pose>
-        <geometry><cylinder><radius>0.004</radius><length>{gz - 0.0075 - TOP_PLATE_Z:.4f}</length></cylinder></geometry>
+        <pose>{pose(mast[3])} 0 0 0</pose>
+        <geometry><cylinder><radius>0.004</radius><length>{mast[2][2]:.4f}</length></cylinder></geometry>
         <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
       </visual>
       <visual name="gps_puck">
@@ -375,6 +393,40 @@ def build():
         <pose>{pose(lid[3])} 0 0 0</pose>
         <geometry><box><size>{pose(lid[2])}</size></box></geometry>
         <material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material>
+      </visual>""")
+
+    # 16.11: крепления, опоры, компоненты под основанием, камера вниз
+    box_colors = {
+        "бортовой компьютер": "0.15 0.45 0.20 1",
+        "радиомодем": "0.25 0.25 0.55 1",
+        "модуль питания": "0.55 0.30 0.15 1",
+        "кронштейн лидара": "0.85 0.85 0.85 1",
+        "кронштейн мачты": "0.85 0.85 0.85 1",
+    }
+    for name, m, size, p in EXTRA_COMPONENTS:
+        key = next((k for k in box_colors if name.startswith(k)), None)
+        if key:
+            vname = "".join(ch if ch.isascii() and ch.isalnum() else "_" for ch in
+                            {"бортовой компьютер": "companion", "радиомодем": "sik_modem",
+                             "модуль питания": "power_module", "кронштейн лидара": "lidar_bridge",
+                             "кронштейн мачты": "gps_bracket"}[key])
+            visuals.append(f"""      <visual name="{vname}">
+        <pose>{pose(p)} 0 0 0</pose>
+        <geometry><box><size>{pose(size)}</size></box></geometry>
+        <material><ambient>{box_colors[key]}</ambient><diffuse>{box_colors[key]}</diffuse></material>
+      </visual>""")
+    for i, (name, m, size, (lx, ly, lz)) in enumerate(c for c in EXTRA_COMPONENTS if c[0].startswith("опора")):
+        visuals.append(f"""      <visual name="leg_{i}">
+        <pose>{lx:.4f} {ly:.4f} {lz:.4f} 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>{LEG_HEIGHT:.4f}</length></cylinder></geometry>
+        <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+      </visual>""")
+    if ENABLE_DOWN_CAMERA:
+        cx, cy, cz = DOWN_CAMERA_POSE[0], DOWN_CAMERA_POSE[1], -DOWN_CAMERA_SIZE[2] / 2
+        visuals.append(f"""      <visual name="down_camera_body">
+        <pose>{cx:.4f} {cy:.4f} {cz:.4f} 0 0 0</pose>
+        <geometry><box><size>{pose(DOWN_CAMERA_SIZE)}</size></box></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
       </visual>""")
 
     rotor_I = np.diag(ROTOR_INERTIA)
@@ -426,16 +478,21 @@ def build():
       <motorType>velocity</motorType>
     </plugin>""")
 
-    extras = "\n".join(f"       - {n}: {m * 1000:.0f} г" for n, m, _, _ in EXTRA_COMPONENTS)
+    leg_collisions = "\n".join(f"""      <collision name="leg_{i}_collision">
+        <pose>{lx:.4f} {ly:.4f} {lz:.4f} 0 0 0</pose>
+        <geometry><cylinder><radius>0.006</radius><length>{LEG_HEIGHT:.4f}</length></cylinder></geometry>
+      </collision>""" for i, (_, _, _, (lx, ly, lz)) in
+        enumerate(c for c in EXTRA_COMPONENTS if c[0].startswith("опора")))
+    extras = "\n".join(f"       - {n}: {m * 1000:.1f} г" for n, m, _, _ in EXTRA_COMPONENTS)
     total = M + 4 * ROTOR_MASS
     sdf = f"""<?xml version="1.0"?>
 <!--
-  project_quad v0.4 — цифровая модель квадрокоптера проекта.
+  project_quad v0.6 — цифровая модель квадрокоптера проекта.
   ФАЙЛ СГЕНЕРИРОВАН скриптом tools/generate_model.py — правьте параметры там.
 
   Геометрия: CAD-модель группы конструкторов (рама G4ZO x2, 5", диагональ 230,5 мм).
   Единицы СИ. Оси: X вперёд, Y влево, Z вверх. Начало — низ рамы, центр моторов.
-  Порядок моторов: PX4 Quadrotor X. Компоновка: отчёт конструкторов от 8.11.2026.
+  Порядок моторов: PX4 Quadrotor X. Компоновка: отчёт конструкторов от 16.11.2026.
   Обороты моторов в УСЛОВНЫХ рад/с (1000 = 3200 настоящих), см. генератор.
 
   Общая масса: {total:.3f} кг. Бортовые компоненты:
@@ -443,13 +500,13 @@ def build():
 -->
 <sdf version="1.9">
   <model name="{MODEL_NAME}">
-    <pose>0 0 0.02 0 0 0</pose>
+    <pose>0 0 {LEG_HEIGHT + 0.005:.3f} 0 0 0</pose>
 
     <link name="base_link">
 {inertial_xml(M, com, I)}
 {chr(10).join(visuals)}
 
-      <!-- Коллизия: пластина рамы + аккумулятор -->
+      <!-- Коллизия: пластина рамы + аккумулятор + опоры (дрон стоит на опорах) -->
       <collision name="frame_collision">
         <pose>0 0 0.0035 0 0 0</pose>
         <geometry><box><size>0.195 0.223 0.007</size></box></geometry>
@@ -458,6 +515,7 @@ def build():
         <pose>{pose(batt[3])} 0 0 0</pose>
         <geometry><box><size>0.076 0.036 0.033</size></box></geometry>
       </collision>
+{leg_collisions}
 {sensors_xml()}
     </link>
 {''.join(rotors)}
@@ -544,8 +602,23 @@ param set-default EKF2_GPS_CTRL 5
     return "\n".join(lines)
 
 
+def spawn_pose_in_world(root):
+    """Высота появления дрона в test_field.sdf: над площадкой (верх 0,01 м) на опорах.
+    <pose> в <include> мира перекрывает <pose> модели, поэтому правим его здесь."""
+    import re
+    path = root / "worlds" / "test_field.sdf"
+    src = path.read_text(encoding="utf-8")
+    z = 0.010 + LEG_HEIGHT + 0.005
+    new, n = re.subn(r"(<include>\s*<uri>model://" + MODEL_NAME + r"</uri>.*?<pose>)([^<]*)(</pose>)",
+                     lambda m: f"{m.group(1)}0 0 {z:.3f} 0 0 0{m.group(3)}", src, count=1, flags=re.S)
+    if n and new != src:
+        path.write_text(new, encoding="utf-8")
+    return z
+
+
 def stab_world(root):
     """Мир test_field_stab.sdf: тот же полигон + встроенный стабилизатор Gazebo."""
+    spawn_pose_in_world(root)
     src = (root / "worlds" / "test_field.sdf").read_text(encoding="utf-8")
     rotors = "".join(f"""
           <rotor>
